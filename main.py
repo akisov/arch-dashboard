@@ -271,11 +271,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    with open("static/index.html", encoding="utf-8") as f:
-        return f.read()
-
 @app.get("/sync-info")
 async def sync_info():
     return get_sync_info()
@@ -355,3 +350,17 @@ async def data(
         selected = QUEUES
     result = query_dashboard(date_from, date_to, selected)
     return JSONResponse(result)
+
+# ── Static files (React build) — MUST be last ─────────────────────────────────
+# Catch-all: serve index.html for any unmatched route (React Router)
+from fastapi.responses import FileResponse
+import os as _os
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def spa_fallback(full_path: str):
+    file = f"static/{full_path}"
+    if _os.path.isfile(file):
+        return FileResponse(file)
+    return FileResponse("static/index.html")
+
+app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
