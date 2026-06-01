@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatCard } from "@/components/StatCard"
 import { FlowCard } from "@/components/FlowCard"
+import { FunnelChart } from "@/components/FunnelChart"
 import { TimelineChart } from "@/components/TimelineChart"
 import { DonutChart } from "@/components/DonutChart"
 import { TaskTable } from "@/components/TaskTable"
@@ -228,16 +229,19 @@ export default function App() {
               </div>
             )}
 
-            {/* Flow cards */}
+            {/* Funnel + Flow cards */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Skeleton className="h-64 rounded-xl" />
                 <Skeleton className="h-64 rounded-xl" />
               </div>
             ) : data && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FlowCard type="ak" taskCount={v1tasks} cutCount={v1cuts} totalTasks={total} />
-                <FlowCard type="ta" taskCount={v2tasks} cutCount={v2cuts} totalTasks={total} />
+              <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
+                <FunnelChart tasks={view} />
+                <div className="grid grid-cols-1 gap-4">
+                  <FlowCard type="ak" taskCount={v1tasks} cutCount={v1cuts} totalTasks={total} />
+                  <FlowCard type="ta" taskCount={v2tasks} cutCount={v2cuts} totalTasks={total} />
+                </div>
               </div>
             )}
 

@@ -92,7 +92,7 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Тип</th>
                 <th className="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">АрхКом</th>
                 <th className="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">ТА</th>
-                <th className="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none"
+                <th className="text-center pl-5 pr-8 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none"
                   onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}>
                   <span className="inline-flex items-center gap-1">Итого <ArrowUpDown className="w-3 h-3" /></span>
                 </th>
@@ -118,7 +118,7 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
                   <td className="px-5 py-4">{badge(t)}</td>
                   <td className="px-5 py-4 text-center text-lg font-black text-[hsl(166,76%,40%)]">{t.v1n || "—"}</td>
                   <td className="px-5 py-4 text-center text-lg font-black text-[hsl(350,89%,60%)]">{t.v2n || "—"}</td>
-                  <td className="px-5 py-4 text-center text-lg font-black text-[hsl(38,92%,50%)]">{t.total || "—"}</td>
+                  <td className="pl-5 pr-8 py-4 text-center text-lg font-black text-[hsl(38,92%,50%)]">{t.total || "—"}</td>
                 </tr>
               ))}
             </tbody>
