@@ -7,7 +7,7 @@ import { StatCard } from "@/components/StatCard"
 import { FlowCard } from "@/components/FlowCard"
 import { FunnelChart } from "@/components/FunnelChart"
 import { TimelineChart } from "@/components/TimelineChart"
-import { DonutChart } from "@/components/DonutChart"
+import { QueueBreakdown } from "@/components/QueueBreakdown"
 import { TaskTable } from "@/components/TaskTable"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
@@ -19,6 +19,14 @@ const QUEUES = ["ALL", "POOLING", "DOSTAVKAPIKO", "UDOSTAVKA"] as const
 type Queue = typeof QUEUES[number]
 
 function fmt(d: Date) { return d.toISOString().slice(0, 10) }
+
+function plural(n: number) {
+  const m10 = n % 10, m100 = n % 100
+  if (m100 >= 11 && m100 <= 19) return "задач"
+  if (m10 === 1) return "задача"
+  if (m10 >= 2 && m10 <= 4) return "задачи"
+  return "задач"
+}
 
 function initDates() {
   const end = new Date()
@@ -197,7 +205,10 @@ export default function App() {
                       {q === "ALL" ? "Все очереди" : q}
                     </span>
                     {loading ? <Skeleton className="h-8 w-12 mb-1" /> : (
-                      <span className="text-3xl font-black tracking-tighter text-primary leading-none mb-1">{tasks.length}</span>
+                      <div className="mb-1 flex items-baseline gap-1">
+                        <span className="text-3xl font-black tracking-tighter text-primary leading-none">{tasks.length}</span>
+                        <span className="text-xs text-muted-foreground">{plural(tasks.length)}</span>
+                      </div>
                     )}
                     <div className="flex gap-3 text-[11px] text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -250,15 +261,15 @@ export default function App() {
               <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} />
             )}
 
-            {/* Donut + Table */}
+            {/* Breakdown + Table */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Skeleton className="h-72 rounded-xl" />
                 <Skeleton className="h-72 rounded-xl" />
               </div>
             ) : data && (
-              <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-4">
-                <DonutChart tasks={view} onFilter={setFilter} />
+              <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4">
+                <QueueBreakdown tasks={view} onQueueClick={(q) => setQueue(q as typeof QUEUES[number])} />
                 <TaskTable tasks={view} activeFilter={filter} onFilter={setFilter} />
               </div>
             )}
