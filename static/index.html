@@ -196,6 +196,14 @@ td{padding:16px 20px;font-size:14px;vertical-align:middle}
 /* spinner */
 .spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* empty db screen */
+.empty-db{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:80px 40px;text-align:center;margin-bottom:28px;display:none}
+.empty-db-icon{font-size:56px;margin-bottom:20px}
+.empty-db-title{font-size:26px;font-weight:800;margin-bottom:10px;letter-spacing:-.5px}
+.empty-db-sub{font-size:15px;color:var(--muted);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6}
+.empty-db-actions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.btn-xl{height:52px;padding:0 32px;font-size:16px;font-weight:700;border-radius:12px}
 </style>
 </head>
 <body>
@@ -249,6 +257,19 @@ td{padding:16px 20px;font-size:14px;vertical-align:middle}
 
   <!-- ERROR -->
   <div id="errBox" class="err-box"></div>
+
+  <!-- EMPTY DB -->
+  <div id="emptyDb" class="empty-db">
+    <div class="empty-db-icon">🗄️</div>
+    <div class="empty-db-title">База данных пустая</div>
+    <div class="empty-db-sub">Данные из Яндекс Трекера ещё не загружены. Запустите полный синк — он загрузит историю переходов за 2 года и сохранит в базу. Следующие обновления будут занимать секунды.</div>
+    <div class="empty-db-actions">
+      <button class="btn btn-primary btn-xl" onclick="startSync(true)">
+        ⟳ Запустить полный синк
+      </button>
+    </div>
+    <div style="margin-top:16px;font-size:13px;color:var(--muted)">Займёт 5–15 минут · Один раз</div>
+  </div>
 
   <!-- PROGRESS -->
   <div id="progWrap">
@@ -364,9 +385,15 @@ async function loadSyncInfo(){
     const d=await fetch('/sync-info').then(r=>r.json());
     const qs=['POOLING','DOSTAVKAPIKO','UDOSTAVKA'];
     const today=new Date().toISOString().slice(0,10);
+    const hasAny=qs.some(q=>d[q]);
+    if(!hasAny){
+      document.getElementById('syncStatus').innerHTML=
+        '<span style="color:var(--a3)">● Данных нет</span> — запустите <b>Полный синк</b>';
+      return;
+    }
     const parts=qs.map(q=>{
       const v=d[q];
-      if(!v) return`<span class="sync-queue"><span class="sync-dot sd-never"></span>${q}: нет данных</span>`;
+      if(!v) return`<span class="sync-queue"><span class="sync-dot sd-never"></span>${q}: —</span>`;
       const cls=v<today?'sd-stale':'sd-ok';
       return`<span class="sync-queue"><span class="sync-dot ${cls}"></span>${q}: <b>${v}</b></span>`;
     });
@@ -397,7 +424,7 @@ function startSync(full){
     } else if(m.type==='done'){
       es.close();
       document.getElementById('progFill').style.width='100%';
-      setTimeout(()=>{pw.style.display='none';loadSyncInfo();loadData();},400);
+      setTimeout(()=>{pw.style.display='none';document.getElementById('emptyDb').style.display='none';loadSyncInfo();loadData();},400);
       setBtns(false);
     } else if(m.type==='error'){
       es.close();pw.style.display='none';showErr(m.msg);setBtns(false);
@@ -415,7 +442,16 @@ async function loadData(){
   const df=document.getElementById('dateFrom').value,dt=document.getElementById('dateTo').value;
   if(!df||!dt)return;
   document.getElementById('errBox').style.display='none';
+  document.getElementById('emptyDb').style.display='none';
   try{
+    // Check if DB has any data at all
+    const info=await fetch('/sync-info').then(r=>r.json());
+    const hasDb=Object.keys(info).length>0&&Object.values(info).some(v=>v);
+    if(!hasDb){
+      document.getElementById('emptyDb').style.display='block';
+      document.getElementById('dashboard').style.display='none';
+      return;
+    }
     const r=await fetch(`/data?date_from=${df}&date_to=${dt}`);
     const d=await r.json();
     if(d.error){showErr(d.error);return;}
