@@ -62,7 +62,7 @@ export function TimelineChart({ tasks, dateFrom, dateTo }: TimelineChartProps) {
       <CardContent className="p-6">
         <p className="text-sm font-bold text-foreground mb-1">Динамика по неделям</p>
         <p className="text-xs text-muted-foreground mb-6">
-          Задачи, пришедшие к техархам, и количество отсечек каждого типа
+          Задачи, пришедшие к техархам, и количество возвратов каждого типа
         </p>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
