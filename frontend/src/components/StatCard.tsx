@@ -20,7 +20,7 @@ const colorMap = {
 export function StatCard({ label, value, sub, icon, color }: StatCardProps) {
   const c = colorMap[color]
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden hover:-translate-y-1 hover:shadow-[var(--shadow-hover)] transition-all duration-200 cursor-default">
       <div className={cn("absolute top-0 left-0 right-0 h-0.5", c.bar)} />
       <CardContent className="p-6">
         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-4", c.icon)}>

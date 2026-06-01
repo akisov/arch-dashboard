@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { RefreshCw, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatCard } from "@/components/StatCard"
 import { FlowCard } from "@/components/FlowCard"
@@ -115,6 +116,7 @@ export default function App() {
               onClick={() => { if (confirm("Полный синк перезагрузит всю историю (5–15 мин). Продолжить?")) doSync(true) }}>
               <RotateCcw className="w-3.5 h-3.5" /> Полный
             </Button>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -184,8 +186,11 @@ export default function App() {
                 return (
                   <button key={q} onClick={() => setQueue(q)}
                     className={cn(
-                      "flex flex-col text-left px-4 py-3 rounded-xl border transition-all min-w-[140px]",
-                      isActive ? "border-primary bg-card" : "border-border bg-card hover:border-primary/40"
+                      "flex flex-col text-left px-4 py-3 rounded-xl border transition-all duration-200 min-w-[140px]",
+                      "hover:-translate-y-0.5 active:scale-[0.98]",
+                      isActive
+                        ? "border-primary bg-card shadow-[0_4px_20px_rgba(108,99,255,0.3)]"
+                        : "border-border bg-card hover:border-primary/50 hover:shadow-[0_4px_16px_rgba(108,99,255,0.12)]"
                     )}>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
                       {q === "ALL" ? "Все очереди" : q}
