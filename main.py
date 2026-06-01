@@ -10,7 +10,7 @@ import json
 
 TRACKER_TOKEN = os.environ.get("TRACKER_TOKEN", "")
 ORG_ID        = os.environ.get("ORG_ID", "7405124")
-TURSO_URL     = os.environ.get("TURSO_URL", "")
+TURSO_URL     = os.environ.get("TURSO_URL", "").replace("libsql://", "https://")
 TURSO_TOKEN   = os.environ.get("TURSO_TOKEN", "")
 
 QUEUES       = ["POOLING", "DOSTAVKAPIKO", "UDOSTAVKA"]
