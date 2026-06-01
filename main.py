@@ -64,32 +64,53 @@ def tracker_headers():
         "Content-Type": "application/json",
     }
 
-async def tracker_get(client: httpx.AsyncClient, path: str):
-    r = await client.get(f"https://api.tracker.yandex.net{path}", headers=tracker_headers())
-    r.raise_for_status()
-    return r.json()
+# Semaphore: max 3 concurrent requests to Tracker to avoid 429
+_sem = asyncio.Semaphore(3)
 
-async def tracker_post(client: httpx.AsyncClient, path: str, body: dict):
-    r = await client.post(f"https://api.tracker.yandex.net{path}", headers=tracker_headers(), json=body)
-    r.raise_for_status()
-    return r.json()
+async def tracker_request(client: httpx.AsyncClient, method: str, path: str, body: dict = None):
+    """Single Tracker request with retry + exponential backoff on 429/5xx."""
+    url = f"https://api.tracker.yandex.net{path}"
+    for attempt in range(6):
+        async with _sem:
+            try:
+                if method == "GET":
+                    r = await client.get(url, headers=tracker_headers())
+                else:
+                    r = await client.post(url, headers=tracker_headers(), json=body)
+            except Exception as e:
+                if attempt == 5:
+                    raise
+                await asyncio.sleep(2 ** attempt)
+                continue
+
+        if r.status_code == 429:
+            wait = 2 ** (attempt + 1)   # 2, 4, 8, 16, 32, 64
+            await asyncio.sleep(wait)
+            continue
+        if r.status_code >= 500:
+            await asyncio.sleep(2 ** attempt)
+            continue
+        r.raise_for_status()
+        return r.json()
+    raise Exception(f"Failed after retries: {url}")
 
 async def fetch_issues_page(client, queue, updated_from, page):
-    return await tracker_post(client, f"/v2/issues/_search?perPage=100&page={page}", {
-        "filter": {
-            "queue": queue,
-            "type": "story",
-            "updatedAt": {"from": f"{updated_from}T00:00:00", "to": "2099-01-01T00:00:00"}
-        }
-    })
+    data = await tracker_request(client, "POST",
+        f"/v2/issues/_search?perPage=100&page={page}",
+        {"filter": {"queue": queue, "type": "story",
+                    "updatedAt": {"from": f"{updated_from}T00:00:00", "to": "2099-01-01T00:00:00"}}}
+    )
+    return data if isinstance(data, list) else []
 
 async def fetch_changelog(client, key):
-    """Fetch all IssueWorkflow changelog entries for an issue."""
+    """Fetch all IssueWorkflow changelog entries for an issue (sequential pages)."""
     all_entries = []
     page = 1
     while True:
         try:
-            data = await tracker_get(client, f"/v2/issues/{key}/changelog?perPage=100&page={page}&type=IssueWorkflow")
+            data = await tracker_request(client, "GET",
+                f"/v2/issues/{key}/changelog?perPage=100&page={page}&type=IssueWorkflow"
+            )
         except Exception:
             break
         if not isinstance(data, list) or not data:
@@ -138,29 +159,25 @@ async def sync_queue(client, queue, updated_from, send):
     page1 = await fetch_issues_page(client, queue, updated_from, 1)
     issues = list(page1)
 
-    # Fetch remaining pages concurrently
+    # Fetch remaining pages sequentially (avoid 429)
     if len(issues) == 100:
         page = 2
         while True:
-            batch = await asyncio.gather(*[
-                fetch_issues_page(client, queue, updated_from, p)
-                for p in range(page, page + 5)
-            ])
-            done = False
-            for data in batch:
-                issues.extend(data)
-                if len(data) < 100:
-                    done = True
-            page += 5
-            if done:
+            data = await fetch_issues_page(client, queue, updated_from, page)
+            issues.extend(data)
+            await asyncio.sleep(0.3)   # small pause between pages
+            if len(data) < 100:
                 break
+            page += 1
 
     await send({"type": "progress", "msg": f"{queue}: {len(issues)} задач, загружаем историю…", "pct": 15})
 
-    BATCH = 20
+    # Process changelogs in small batches of 5 with pause between batches
+    BATCH = 5
     for i in range(0, len(issues), BATCH):
         chunk = issues[i:i + BATCH]
         changelogs = await asyncio.gather(*[fetch_changelog(client, iss["key"]) for iss in chunk])
+        await asyncio.sleep(0.5)   # pause after each batch
         for iss, cl in zip(chunk, changelogs):
             upsert_task(con, iss["key"], iss.get("summary", "—"), queue, iss.get("createdAt", ""))
             save_transitions(con, iss["key"], cl)
