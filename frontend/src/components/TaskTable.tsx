@@ -105,7 +105,7 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Тип</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">АрхКом</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">ТА</th>
-                <th style={{paddingLeft:"16px",paddingRight:"40px"}} className="text-center py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap cursor-pointer select-none"
+                <th className="col-total py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap cursor-pointer select-none"
                   onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}>
                   <span className="inline-flex items-center gap-1">
                     Итого <ArrowUpDown className="w-3 h-3" />
@@ -143,7 +143,7 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
                       {t.v2n || <span className="text-muted-foreground/40 font-normal text-sm">—</span>}
                     </span>
                   </td>
-                  <td style={{paddingLeft:"16px",paddingRight:"40px"}} className="py-4 text-center">
+                  <td className="col-total py-4">
                     {t.total > 0
                       ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-black tabular-nums">
                           {t.total}

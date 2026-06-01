@@ -68,6 +68,8 @@
 }
 
 /* ── Scrollbar ── */
+.col-total { padding-left: 16px !important; padding-right: 40px !important; text-align: center; }
+
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: hsl(var(--background)); }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
