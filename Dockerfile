@@ -4,6 +4,8 @@ WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm install --quiet
 COPY frontend/ .
+# bust cache on every deploy so HF always rebuilds
+ARG CACHEBUST=1
 RUN npm run build
 
 # ── Stage 2: Python backend ───────────────────────────────────────────────────
@@ -13,7 +15,6 @@ WORKDIR /app
 RUN pip install --no-cache-dir fastapi uvicorn httpx
 
 COPY main.py .
-# Copy built React app into static/
 COPY --from=frontend-build /frontend/dist ./static
 
 RUN mkdir -p /data
