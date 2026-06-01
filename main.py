@@ -188,13 +188,14 @@ async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
 
     results = await turso_execute([
         stmt(f"""
-            SELECT DISTINCT t.issue_key, t.ts AS entry_ts, tk.title, tk.queue
+            SELECT t.issue_key, MIN(t.ts) AS entry_ts, tk.title, tk.queue
             FROM transitions t
             JOIN tasks tk ON tk.key = t.issue_key
             WHERE t.to_status = ?
               AND substr(t.ts,1,10) >= ?
               AND substr(t.ts,1,10) <= ?
               AND tk.queue IN ({q_ph})
+            GROUP BY t.issue_key, tk.title, tk.queue
         """, [ENTRY_STATUS, date_from, date_to, *queues]),
     ])
 
