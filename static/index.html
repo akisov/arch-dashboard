@@ -3,480 +3,604 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Арх. комитет — Аналитика отсечек</title>
+<title>Арх. комитет</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0f1a;--s1:#141724;--s2:#1c2035;--s3:#222844;--border:#2a3050;
-  --a1:#7c6fff;--a2:#00d4a8;--a3:#ff6b8a;--a4:#ffb347;--a5:#5bc4f5;
-  --text:#e4e8f7;--muted:#6b7499;--r:14px;
+  --bg:#0a0c14;
+  --s1:#111420;
+  --s2:#181c2e;
+  --s3:#1e2338;
+  --border:#252d47;
+  --border2:#2e3a5c;
+  --a1:#6c63ff;
+  --a2:#00c9a7;
+  --a3:#ff4d6d;
+  --a4:#ffb020;
+  --a5:#38bdf8;
+  --text:#f0f2ff;
+  --text2:#c8cde8;
+  --muted:#5a6385;
+  --r:16px;
+  --r2:12px;
 }
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;padding:24px 20px}
+html{font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;line-height:1.5}
 
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--a1),var(--a5));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.logo h1{font-size:20px;font-weight:800;letter-spacing:-.5px}
-.logo p{font-size:11px;color:var(--muted);margin-top:2px}
-.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* ── TOPNAV ── */
+.topnav{
+  height:56px;background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;position:sticky;top:0;z-index:100;
+}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-brand-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--a1),var(--a5));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.nav-brand-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.nav-brand-sub{font-size:11px;color:var(--muted);font-weight:500}
+.nav-links{display:flex;align-items:center;gap:2px}
+.nav-link{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;border:none;background:none}
+.nav-link:hover{color:var(--text2);background:var(--s2)}
+.nav-link.active{color:var(--text);background:var(--s2);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:8px}
 
-.period-row{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:999px;padding:5px 12px}
-.period-row label{font-size:11px;color:var(--muted)}
-.period-row input[type=date]{background:transparent;border:none;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;width:102px}
-.period-row input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
-.period-sep{color:var(--border)}
+/* ── MAIN LAYOUT ── */
+.main{max-width:1400px;margin:0 auto;padding:32px 32px 60px}
 
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:999px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px}
+.page-title{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
+.page-sub{font-size:14px;color:var(--muted);margin-top:4px}
+.page-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* period picker */
+.period-picker{display:flex;align-items:center;gap:0;background:var(--s2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.period-btn{padding:8px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;transition:all .15s;white-space:nowrap}
+.period-btn:hover{color:var(--text2)}
+.period-btn.active{background:var(--a1);color:#fff;font-weight:600}
+.period-sep-line{width:1px;height:24px;background:var(--border)}
+.date-range{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:0 14px;height:40px}
+.date-range label{font-size:12px;color:var(--muted);font-weight:500}
+.date-range input[type=date]{background:transparent;border:none;color:var(--text2);font-size:13px;font-family:inherit;outline:none;cursor:pointer;width:110px}
+.date-range input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
+.date-sep{color:var(--border2);font-size:13px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 20px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
 .btn-primary{background:var(--a1);color:#fff}
-.btn-primary:hover{opacity:.85}
+.btn-primary:hover{filter:brightness(1.1)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
-.btn-sync{background:var(--s2);border:1px solid var(--border);color:var(--text)}
-.btn-sync:hover{border-color:var(--a1);color:var(--a1)}
-.btn-sync:disabled{opacity:.4;cursor:not-allowed}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--a1);color:var(--a1)}
+.btn-outline:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:var(--s2);border:1px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--border2)}
 
-/* sync info bar */
-#syncBar{display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;margin-bottom:16px;font-size:12px;color:var(--muted);flex-wrap:wrap}
-#syncBar b{color:var(--text)}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--a2);display:inline-block;margin-right:4px}
-.sync-dot.stale{background:var(--a4)}
-.sync-dot.never{background:var(--a3)}
+/* sync info */
+.sync-info{display:flex;align-items:center;gap:16px;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 20px;margin-bottom:28px;flex-wrap:wrap}
+.sync-info-label{font-size:12px;color:var(--muted);font-weight:500}
+.sync-queue{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sd-ok{background:var(--a2)}.sd-stale{background:var(--a4)}.sd-never{background:var(--a3)}
 
-/* progress */
-#progWrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:32px;text-align:center;margin-bottom:20px;display:none}
-#progLabel{font-size:14px;color:var(--text);font-weight:600;margin-bottom:5px}
-#progMsg{font-size:11px;color:var(--muted);margin-bottom:16px;min-height:16px}
-#progBarWrap{height:5px;background:var(--s3);border-radius:999px;overflow:hidden;max-width:440px;margin:0 auto 10px}
-#progFill{height:100%;background:linear-gradient(90deg,var(--a1),var(--a5));border-radius:999px;width:0%;transition:width .3s}
-#progHint{font-size:10px;color:var(--muted)}
+/* ── PROGRESS ── */
+#progWrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:60px 40px;text-align:center;margin-bottom:28px;display:none}
+#progTitle{font-size:20px;font-weight:700;margin-bottom:8px}
+#progMsg{font-size:14px;color:var(--muted);margin-bottom:28px;min-height:20px}
+#progBarWrap{height:6px;background:var(--s3);border-radius:999px;overflow:hidden;max-width:480px;margin:0 auto 14px}
+#progFill{height:100%;background:linear-gradient(90deg,var(--a1),var(--a5));border-radius:999px;width:0%;transition:width .35s ease}
+#progHint{font-size:12px;color:var(--muted)}
 
-.err{background:rgba(255,107,138,.08);border:1px solid rgba(255,107,138,.3);border-radius:var(--r);padding:12px 16px;color:var(--a3);font-size:12px;margin-bottom:16px;display:none}
-.slabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.slabel::after{content:'';flex:1;height:1px;background:var(--border)}
+/* ── ERROR ── */
+.err-box{background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.25);border-radius:12px;padding:16px 20px;color:var(--a3);font-size:14px;margin-bottom:24px;display:none}
 
-/* queue cards */
-.qcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px}
-.qcard{background:var(--s1);border:2px solid var(--border);border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:border-color .15s,background .15s}
-.qcard:hover{border-color:var(--a1)}.qcard.active{border-color:var(--a1);background:var(--s2)}
-.qcard-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:5px}
-.qcard-num{font-size:26px;font-weight:800;color:var(--a1);line-height:1;margin-bottom:4px}
-.qcard-meta{display:flex;gap:8px;font-size:10px;color:var(--muted)}
-.qcard-meta span{display:flex;align-items:center;gap:3px}
-.dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
-.dt{background:var(--a2)}.dp{background:var(--a3)}
+/* ── QUEUE TABS ── */
+.queue-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.qtab{padding:10px 20px;border-radius:10px;border:1.5px solid var(--border);background:var(--s1);cursor:pointer;transition:all .15s;text-align:left;min-width:160px}
+.qtab:hover{border-color:var(--border2)}
+.qtab.active{border-color:var(--a1);background:var(--s2)}
+.qtab-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px}
+.qtab-num{font-size:32px;font-weight:900;line-height:1;letter-spacing:-1px;color:var(--a1);margin-bottom:4px}
+.qtab-meta{display:flex;gap:12px;font-size:11px;color:var(--muted)}
+.qtab-meta span{display:flex;align-items:center;gap:4px}
+.mdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.md-ak{background:var(--a2)}.md-ta{background:var(--a3)}
 
-/* stat cards */
-.scards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
-.scard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px 13px;position:relative;overflow:hidden}
-.scard::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.sc1::after{background:var(--a1)}.sc2::after{background:var(--a2)}.sc3::after{background:var(--a3)}.sc4::after{background:var(--a4)}.sc5::after{background:var(--a5)}
-.scard-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
-.scard-val{font-size:32px;font-weight:800;line-height:1;letter-spacing:-1px}
-.sc1 .scard-val{color:var(--a1)}.sc2 .scard-val{color:var(--a2)}.sc3 .scard-val{color:var(--a3)}.sc4 .scard-val{color:var(--a4)}.sc5 .scard-val{color:var(--a5)}
-.scard-sub{font-size:10px;color:var(--muted);margin-top:4px}
+/* ── BIG STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px}
+@media(max-width:1100px){.stat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.stat-grid{grid-template-columns:1fr 1fr}}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:24px 22px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.sc-a1::before{background:var(--a1)}.sc-a2::before{background:var(--a2)}.sc-a3::before{background:var(--a3)}.sc-a4::before{background:var(--a4)}.sc-a5::before{background:var(--a5)}
+.stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px}
+.si-a1{background:rgba(108,99,255,.15)}.si-a2{background:rgba(0,201,167,.15)}.si-a3{background:rgba(255,77,109,.15)}.si-a4{background:rgba(255,176,32,.15)}.si-a5{background:rgba(56,189,248,.15)}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:52px;font-weight:900;line-height:1;letter-spacing:-2px;margin-bottom:4px}
+.sc-a1 .stat-value{color:var(--a1)}.sc-a2 .stat-value{color:var(--a2)}.sc-a3 .stat-value{color:var(--a3)}.sc-a4 .stat-value{color:var(--a4)}.sc-a5 .stat-value{color:var(--a5)}
+.stat-sub{font-size:12px;color:var(--muted)}
 
-.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
-@media(max-width:700px){.twocol{grid-template-columns:1fr}}
+/* ── TWO COL ── */
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:900px){.row-2{grid-template-columns:1fr}}
 
-.fcard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px}
-.fcard h3{font-size:12px;font-weight:700;margin-bottom:2px}
-.fcard-sub{font-size:10px;color:var(--muted);margin-bottom:11px}
-.farrow{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.spill{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:10px;line-height:1.3}
-.spill-from{font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
-.spill-name{font-weight:600;margin-top:1px}
-.fi{font-size:13px;color:var(--muted)}
-.fbig{font-size:38px;font-weight:800;letter-spacing:-1.5px;line-height:1}
-.fc-teal .fbig{color:var(--a2)}.fc-pink .fbig{color:var(--a3)}
-.fof{font-size:10px;color:var(--muted);margin:2px 0 10px}
-.mbar{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
-.mbar-track{flex:1;height:4px;background:var(--s3);border-radius:999px;overflow:hidden}
-.mbar-fill{height:100%;border-radius:999px;transition:width .7s}
+/* ── FLOW CARDS ── */
+.flow-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:28px}
+.flow-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.flow-card-header h3{font-size:16px;font-weight:700}
+.flow-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px}
+.fb-ak{background:rgba(0,201,167,.12);color:var(--a2)}.fb-ta{background:rgba(255,77,109,.12);color:var(--a3)}
+.flow-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.flow-arrow{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.status-pill{background:var(--s3);border:1px solid var(--border2);border-radius:10px;padding:10px 16px}
+.sp-from{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+.sp-name{font-size:13px;font-weight:600;margin-top:2px;color:var(--text2)}
+.arrow-icon{font-size:20px;color:var(--muted)}
+.flow-big{font-size:64px;font-weight:900;line-height:1;letter-spacing:-3px;margin-bottom:4px}
+.fc-ak .flow-big{color:var(--a2)}.fc-ta .flow-big{color:var(--a3)}
+.flow-of{font-size:13px;color:var(--muted);margin-bottom:20px}
+.flow-pct-bar{display:flex;align-items:center;gap:10px}
+.fpb-label{font-size:12px;color:var(--muted);width:70px;flex-shrink:0}
+.fpb-track{flex:1;height:6px;background:var(--s3);border-radius:999px;overflow:hidden}
+.fpb-fill{height:100%;border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.fpb-pct{font-size:12px;font-weight:600;width:36px;text-align:right}
 
-.chart-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:20px}
-.chart-wrap h3{font-size:12px;font-weight:700;margin-bottom:2px}
-.chart-sub{font-size:10px;color:var(--muted);margin-bottom:12px}
+/* ── CHART ── */
+.chart-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.card-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
 
-.donut-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:20px}
-.donut-wrap h3{font-size:12px;font-weight:700;margin-bottom:2px}
-.donut-sub{font-size:10px;color:var(--muted);margin-bottom:14px}
-.donut-inner{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
-.donut-legend{display:flex;flex-direction:column;gap:6px;flex:1;min-width:150px}
-.dleg-row{display:flex;align-items:center;gap:7px;font-size:11px;cursor:pointer;padding:4px 6px;border-radius:7px;transition:background .1s}
-.dleg-row:hover{background:var(--s2)}
-.dleg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.dleg-label{font-weight:600;flex:1}
-.dleg-n{font-weight:800;font-size:13px}
-.dleg-pct{font-size:10px;color:var(--muted);margin-left:3px}
+/* ── DONUT ── */
+.donut-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.donut-inner{display:flex;align-items:center;gap:40px;flex-wrap:wrap}
+.donut-legend{display:flex;flex-direction:column;gap:12px;flex:1;min-width:200px}
+.dleg{display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px 10px;border-radius:10px;transition:background .12s}
+.dleg:hover{background:var(--s2)}
+.dleg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.dleg-text{flex:1}
+.dleg-name{font-size:14px;font-weight:600}
+.dleg-count{font-size:13px;color:var(--muted)}
+.dleg-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.dleg-pct{font-size:11px;color:var(--muted);font-weight:500}
 
-.tsection{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
-.thead{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.thead h3{font-size:12px;font-weight:700}
-.ftabs{display:flex;gap:3px;flex-wrap:wrap}
-.ftab{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer;transition:all .13s}
+/* ── TABLE ── */
+.table-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.table-header{padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.table-title{font-size:16px;font-weight:700}
+.table-count{font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.filter-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.ftab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .13s;background:transparent;font-family:inherit}
+.ftab:hover{border-color:var(--border2);color:var(--text2)}
 .ftab.active{background:var(--a1);border-color:var(--a1);color:#fff}
 .tscroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-thead th{text-align:left;padding:7px 11px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+thead th{text-align:left;padding:12px 20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;background:var(--s2)}
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--s2)}
-td{padding:9px 11px;font-size:11px;vertical-align:middle}
-td a{color:var(--a1);text-decoration:none;font-weight:700;font-size:11px}
-td a:hover{text-decoration:underline}
-.ttitle{color:var(--text);line-height:1.4;max-width:340px}
-.badge{display:inline-flex;align-items:center;border-radius:5px;padding:2px 6px;font-size:9px;font-weight:700}
-.bv1{background:rgba(0,212,168,.12);color:var(--a2)}
-.bv2{background:rgba(255,107,138,.12);color:var(--a3)}
-.bboth{background:rgba(124,111,255,.12);color:var(--a1)}
-.bnone{background:var(--s3);color:var(--muted)}
-.ncell{font-weight:700;text-align:center;font-size:12px}
-.empty{text-align:center;padding:28px;color:var(--muted);font-size:12px}
+td{padding:16px 20px;font-size:14px;vertical-align:middle}
+.td-key a{color:var(--a1);text-decoration:none;font-weight:700;font-size:13px;font-family:'Inter',monospace}
+.td-key a:hover{text-decoration:underline}
+.td-title{color:var(--text);max-width:400px;line-height:1.45}
+.td-queue{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.td-date{font-size:13px;color:var(--muted)}
+.td-num{font-size:18px;font-weight:800;text-align:center;letter-spacing:-.5px}
+.n-ak{color:var(--a2)}.n-ta{color:var(--a3)}.n-tot{color:var(--a4)}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700}
+.b-ak{background:rgba(0,201,167,.12);color:var(--a2)}
+.b-ta{background:rgba(255,77,109,.12);color:var(--a3)}
+.b-both{background:rgba(108,99,255,.12);color:var(--a1)}
+.b-none{background:var(--s3);color:var(--muted)}
+.empty-state{padding:60px;text-align:center;color:var(--muted);font-size:15px}
+
+/* spinner */
+.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-icon">🏛</div>
+<!-- TOPNAV -->
+<nav class="topnav">
+  <div class="nav-brand">
+    <div class="nav-brand-icon">🏛</div>
     <div>
-      <h1>Арх. комитет</h1>
-      <p>Аналитика отсечек · Story-задачи</p>
+      <div class="nav-brand-name">Арх. комитет</div>
+      <div class="nav-brand-sub">Аналитика отсечек</div>
     </div>
   </div>
-  <div class="hright">
-    <div class="period-row">
-      <label>с</label>
-      <input type="date" id="dateFrom"/>
-      <span class="period-sep">—</span>
-      <label>по</label>
-      <input type="date" id="dateTo"/>
-    </div>
-    <button class="btn btn-primary" id="loadBtn" onclick="loadData()">Показать</button>
-    <button class="btn btn-sync" id="syncBtn" onclick="startSync(false)" title="Загрузить новые данные из Трекера">⟳ Синк</button>
-    <button class="btn btn-sync" id="fullSyncBtn" onclick="confirmFullSync()" title="Полная перезагрузка всех данных">⟳ Полный синк</button>
+  <div class="nav-links">
+    <button class="nav-link active">Аналитика</button>
   </div>
-</header>
+  <div class="nav-right">
+    <button class="btn btn-ghost" id="syncBtn" onclick="startSync(false)" style="height:34px;font-size:12px">⟳ Синк</button>
+    <button class="btn btn-ghost" id="fullSyncBtn" onclick="confirmFullSync()" style="height:34px;font-size:12px">⟳ Полный</button>
+  </div>
+</nav>
 
-<!-- Sync info -->
-<div id="syncBar">
-  <span id="syncStatus">Проверяем синхронизацию…</span>
-</div>
+<!-- MAIN -->
+<div class="main">
 
-<div id="errBox" class="err"></div>
-
-<!-- Progress -->
-<div id="progWrap">
-  <div id="progLabel">Синхронизация с Трекером…</div>
-  <div id="progMsg"></div>
-  <div id="progBarWrap"><div id="progFill"></div></div>
-  <div id="progHint">Загружаем историю переходов и сохраняем в базу. Первый раз занимает 2–5 минут.</div>
-</div>
-
-<div id="dashboard" style="display:none">
-  <div class="slabel">Очереди</div>
-  <div class="qcards" id="qcards"></div>
-  <div class="scards" id="scards"></div>
-  <div class="twocol">
-    <div class="fcard fc-teal">
-      <h3>🟢 АрхКом — ревью аналитики</h3>
-      <div class="fcard-sub">Задача прошла через ревью аналитики арх. комитета</div>
-      <div class="farrow">
-        <div class="spill"><div class="spill-from">Из</div><div class="spill-name">Аналит. проработка готово</div></div>
-        <div class="fi">→</div>
-        <div class="spill"><div class="spill-from">В</div><div class="spill-name">Ревью аналитики</div></div>
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Аналитика переходов</div>
+      <div class="page-sub">Story-задачи · POOLING · DOSTAVKAPIKO · UDOSTAVKA</div>
+    </div>
+    <div class="page-controls">
+      <div class="date-range">
+        <label>с</label>
+        <input type="date" id="dateFrom"/>
+        <span class="date-sep">—</span>
+        <label>по</label>
+        <input type="date" id="dateTo"/>
       </div>
-      <div class="fbig" id="fV1tasks">—</div>
-      <div class="fof">задач / <span id="fV1cuts">—</span> переходов</div>
-      <div class="mbar"><span style="width:52px">от всего</span>
-        <div class="mbar-track"><div class="mbar-fill" id="mbarV1" style="background:var(--a2);width:0%"></div></div>
-        <span id="mbarV1txt" style="width:28px;text-align:right">0%</span>
-      </div>
-    </div>
-    <div class="fcard fc-pink">
-      <h3>🔴 ТА — возврат на уточнение</h3>
-      <div class="fcard-sub">Технический архитектор вернул задачу на доработку</div>
-      <div class="farrow">
-        <div class="spill"><div class="spill-from">Из</div><div class="spill-name">Согласование архитектуры</div></div>
-        <div class="fi">→</div>
-        <div class="spill"><div class="spill-from">В</div><div class="spill-name">На уточнении</div></div>
-      </div>
-      <div class="fbig" id="fV2tasks">—</div>
-      <div class="fof">задач / <span id="fV2cuts">—</span> переходов</div>
-      <div class="mbar"><span style="width:52px">от всего</span>
-        <div class="mbar-track"><div class="mbar-fill" id="mbarV2" style="background:var(--a3);width:0%"></div></div>
-        <span id="mbarV2txt" style="width:28px;text-align:right">0%</span>
-      </div>
+      <button class="btn btn-primary" id="loadBtn" onclick="loadData()">
+        Показать
+      </button>
     </div>
   </div>
 
-  <div class="chart-wrap">
-    <h3>Поступления к техархам по неделям</h3>
-    <div class="chart-sub">Задачи, перешедшие в «Аналит. проработка готово» за выбранный период</div>
-    <svg id="timelineChart" style="display:block;width:100%"></svg>
+  <!-- SYNC INFO -->
+  <div class="sync-info">
+    <span class="sync-info-label">🗄 База данных:</span>
+    <span id="syncStatus" style="font-size:13px;color:var(--muted)">Проверяем…</span>
   </div>
 
-  <div class="donut-wrap">
-    <h3>Отсечки на задачу</h3>
-    <div class="donut-sub">Распределение по суммарному числу отсечек (АрхКом + ТА)</div>
-    <div class="donut-inner">
-      <svg id="donutSvg" width="180" height="180" viewBox="0 0 180 180" style="flex-shrink:0"></svg>
-      <div class="donut-legend" id="donutLegend"></div>
-    </div>
+  <!-- ERROR -->
+  <div id="errBox" class="err-box"></div>
+
+  <!-- PROGRESS -->
+  <div id="progWrap">
+    <div id="progTitle">Синхронизация с Трекером</div>
+    <div id="progMsg">Подключаемся…</div>
+    <div id="progBarWrap"><div id="progFill"></div></div>
+    <div id="progHint">Загружаем историю переходов и сохраняем в базу. Первый раз занимает несколько минут.</div>
   </div>
 
-  <div class="tsection">
-    <div class="thead">
-      <h3>Задачи <span id="tcount" style="color:var(--muted);font-size:10px;font-weight:400"></span></h3>
-      <div class="ftabs">
-        <button class="ftab active" data-f="all"   onclick="setFilter('all',this)">Все</button>
-        <button class="ftab" data-f="v1"    onclick="setFilter('v1',this)">АрхКом</button>
-        <button class="ftab" data-f="v2"    onclick="setFilter('v2',this)">ТА</button>
-        <button class="ftab" data-f="both"  onclick="setFilter('both',this)">Оба</button>
-        <button class="ftab" data-f="none"  onclick="setFilter('none',this)">Без отсечек</button>
-        <button class="ftab" data-f="multi" onclick="setFilter('multi',this)">2+</button>
+  <div id="dashboard" style="display:none">
+
+    <!-- QUEUE TABS -->
+    <div class="queue-tabs" id="queueTabs"></div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid" id="statGrid"></div>
+
+    <!-- FLOW CARDS -->
+    <div class="row-2" id="flowCards">
+      <div class="flow-card fc-ak">
+        <div class="flow-card-header">
+          <h3>АрхКом — ревью аналитики</h3>
+          <span class="flow-badge fb-ak">АрхКом</span>
+        </div>
+        <div class="flow-sub">Задача прошла через ревью арх. комитета</div>
+        <div class="flow-arrow">
+          <div class="status-pill"><div class="sp-from">Из статуса</div><div class="sp-name">Аналит. проработка готово</div></div>
+          <span class="arrow-icon">→</span>
+          <div class="status-pill"><div class="sp-from">В статус</div><div class="sp-name">Ревью аналитики</div></div>
+        </div>
+        <div class="flow-big" id="fAkN">—</div>
+        <div class="flow-of">задач · <span id="fAkCuts">—</span> переходов всего</div>
+        <div class="flow-pct-bar">
+          <span class="fpb-label">от всего</span>
+          <div class="fpb-track"><div class="fpb-fill" id="fAkBar" style="background:var(--a2);width:0%"></div></div>
+          <span class="fpb-pct" id="fAkPct" style="color:var(--a2)">0%</span>
+        </div>
+      </div>
+      <div class="flow-card fc-ta">
+        <div class="flow-card-header">
+          <h3>ТА — возврат на уточнение</h3>
+          <span class="flow-badge fb-ta">ТА</span>
+        </div>
+        <div class="flow-sub">Технический архитектор вернул задачу на доработку</div>
+        <div class="flow-arrow">
+          <div class="status-pill"><div class="sp-from">Из статуса</div><div class="sp-name">Согласование архитектуры</div></div>
+          <span class="arrow-icon">→</span>
+          <div class="status-pill"><div class="sp-from">В статус</div><div class="sp-name">На уточнении</div></div>
+        </div>
+        <div class="flow-big" id="fTaN">—</div>
+        <div class="flow-of">задач · <span id="fTaCuts">—</span> переходов всего</div>
+        <div class="flow-pct-bar">
+          <span class="fpb-label">от всего</span>
+          <div class="fpb-track"><div class="fpb-fill" id="fTaBar" style="background:var(--a3);width:0%"></div></div>
+          <span class="fpb-pct" id="fTaPct" style="color:var(--a3)">0%</span>
+        </div>
       </div>
     </div>
-    <div id="tableWrap" class="tscroll"></div>
-  </div>
-</div>
+
+    <!-- TIMELINE CHART -->
+    <div class="chart-card">
+      <div class="card-title">Поступления к техархам по неделям</div>
+      <div class="card-sub">Количество задач, перешедших в «Аналит. проработка готово» за выбранный период</div>
+      <svg id="timelineSvg" style="display:block;width:100%"></svg>
+    </div>
+
+    <!-- DONUT -->
+    <div class="donut-card">
+      <div class="card-title">Отсечки на задачу</div>
+      <div class="card-sub">Распределение задач по суммарному числу отсечек (АрхКом + ТА)</div>
+      <div class="donut-inner">
+        <svg id="donutSvg" width="220" height="220" viewBox="0 0 220 220" style="flex-shrink:0"></svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <span class="table-title">Задачи</span>
+          <span class="table-count" id="tcount"></span>
+        </div>
+        <div class="filter-tabs">
+          <button class="ftab active" data-f="all"   onclick="setFilter('all',this)">Все</button>
+          <button class="ftab" data-f="v1"    onclick="setFilter('v1',this)">АрхКом</button>
+          <button class="ftab" data-f="v2"    onclick="setFilter('v2',this)">ТА</button>
+          <button class="ftab" data-f="both"  onclick="setFilter('both',this)">Оба</button>
+          <button class="ftab" data-f="none"  onclick="setFilter('none',this)">Без отсечек</button>
+          <button class="ftab" data-f="multi" onclick="setFilter('multi',this)">2+ отсечки</button>
+        </div>
+      </div>
+      <div class="tscroll"><div id="tableWrap"></div></div>
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /main -->
 
 <script>
-const COLORS = ['#7c6fff','#00d4a8','#ff6b8a','#ffb347','#5bc4f5','#e879f9','#fb923c'];
-let DATA = null, VIEW = [], curQueue = 'ALL', curFilter = 'all';
+const COLORS=['#6c63ff','#00c9a7','#ff4d6d','#ffb020','#38bdf8','#e879f9','#fb923c'];
+let DATA=null,VIEW=[],curQueue='ALL',curFilter='all';
 
-function initDates() {
-  const end = new Date(), start = new Date();
-  start.setDate(start.getDate() - 30);
-  const fmt = d => d.toISOString().slice(0,10);
-  document.getElementById('dateFrom').value = fmt(start);
-  document.getElementById('dateTo').value   = fmt(end);
+function initDates(){
+  const e=new Date(),s=new Date();s.setDate(s.getDate()-30);
+  const f=d=>d.toISOString().slice(0,10);
+  document.getElementById('dateFrom').value=f(s);
+  document.getElementById('dateTo').value=f(e);
 }
 
-// ── Sync info ─────────────────────────────────────────────────────────────────
-async function loadSyncInfo() {
-  try {
-    const data = await fetch('/sync-info').then(r=>r.json());
-    const queues = ['POOLING','DOSTAVKAPIKO','UDOSTAVKA'];
-    const today = new Date().toISOString().slice(0,10);
-    const parts = queues.map(q => {
-      const d = data[q];
-      if (!d) return `<span><span class="sync-dot never"></span>${q}: нет данных</span>`;
-      const stale = d < today;
-      return `<span><span class="sync-dot${stale?' stale':''}"></span>${q}: <b>${d}</b></span>`;
+// ── Sync info ──────────────────────────────────────────────────────────────
+async function loadSyncInfo(){
+  try{
+    const d=await fetch('/sync-info').then(r=>r.json());
+    const qs=['POOLING','DOSTAVKAPIKO','UDOSTAVKA'];
+    const today=new Date().toISOString().slice(0,10);
+    const parts=qs.map(q=>{
+      const v=d[q];
+      if(!v) return`<span class="sync-queue"><span class="sync-dot sd-never"></span>${q}: нет данных</span>`;
+      const cls=v<today?'sd-stale':'sd-ok';
+      return`<span class="sync-queue"><span class="sync-dot ${cls}"></span>${q}: <b>${v}</b></span>`;
     });
-    document.getElementById('syncStatus').innerHTML = '🗄 БД: ' + parts.join(' · ');
-  } catch {
-    document.getElementById('syncStatus').textContent = '⚠️ Не удалось получить статус БД';
+    document.getElementById('syncStatus').innerHTML=parts.join(' &nbsp;·&nbsp; ');
+  }catch{
+    document.getElementById('syncStatus').textContent='Не удалось получить статус';
   }
 }
 
-// ── Sync ──────────────────────────────────────────────────────────────────────
-function confirmFullSync() {
-  if (confirm('Полный синк перезагрузит всю историю из Трекера (2+ года). Занимает 5–15 минут. Продолжить?')) {
-    startSync(true);
-  }
+// ── Sync ───────────────────────────────────────────────────────────────────
+function confirmFullSync(){
+  if(confirm('Полный синк перезагрузит всю историю за 2 года. Занимает 5–15 минут. Продолжить?')) startSync(true);
 }
-
-function startSync(full) {
-  document.getElementById('progWrap').style.display = 'block';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('progFill').style.width = '2%';
-  document.getElementById('progLabel').textContent = full ? 'Полная синхронизация…' : 'Инкрементальный синк…';
-  document.getElementById('progMsg').textContent = '';
-  document.getElementById('syncBtn').disabled = true;
-  document.getElementById('fullSyncBtn').disabled = true;
-  document.getElementById('loadBtn').disabled = true;
-
-  const es = new EventSource(`/sync?full=${full}`);
-  es.onmessage = e => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'progress') {
-      document.getElementById('progLabel').textContent = msg.msg;
-      document.getElementById('progFill').style.width = msg.pct + '%';
-    } else if (msg.type === 'done') {
+function startSync(full){
+  const pw=document.getElementById('progWrap');
+  pw.style.display='block';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('progFill').style.width='2%';
+  document.getElementById('progTitle').textContent=full?'Полная синхронизация…':'Инкрементальный синк…';
+  document.getElementById('progMsg').textContent='';
+  setBtns(true);
+  const es=new EventSource(`/sync?full=${full}`);
+  es.onmessage=e=>{
+    const m=JSON.parse(e.data);
+    if(m.type==='progress'){
+      document.getElementById('progTitle').textContent=m.msg;
+      document.getElementById('progFill').style.width=m.pct+'%';
+    } else if(m.type==='done'){
       es.close();
-      document.getElementById('progFill').style.width = '100%';
-      setTimeout(() => {
-        document.getElementById('progWrap').style.display = 'none';
-        loadSyncInfo();
-        loadData();
-      }, 400);
-      enableBtns();
-    } else if (msg.type === 'error') {
-      es.close();
-      document.getElementById('progWrap').style.display = 'none';
-      showErr(msg.msg);
-      enableBtns();
+      document.getElementById('progFill').style.width='100%';
+      setTimeout(()=>{pw.style.display='none';loadSyncInfo();loadData();},400);
+      setBtns(false);
+    } else if(m.type==='error'){
+      es.close();pw.style.display='none';showErr(m.msg);setBtns(false);
     }
   };
-  es.onerror = () => {
-    es.close();
-    document.getElementById('progWrap').style.display = 'none';
-    showErr('Ошибка соединения при синхронизации');
-    enableBtns();
-  };
+  es.onerror=()=>{es.close();document.getElementById('progWrap').style.display='none';showErr('Ошибка соединения');setBtns(false);};
 }
-
-function enableBtns() {
-  document.getElementById('syncBtn').disabled = false;
-  document.getElementById('fullSyncBtn').disabled = false;
-  document.getElementById('loadBtn').disabled = false;
+function setBtns(dis){
+  ['syncBtn','fullSyncBtn','loadBtn'].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=dis;});
 }
+function showErr(msg){const e=document.getElementById('errBox');e.textContent='⚠️ '+msg;e.style.display='block';}
 
-// ── Load from DB ──────────────────────────────────────────────────────────────
-async function loadData() {
-  const df = document.getElementById('dateFrom').value;
-  const dt = document.getElementById('dateTo').value;
-  if (!df || !dt) return;
-  document.getElementById('errBox').style.display = 'none';
-
-  try {
-    const resp = await fetch(`/data?date_from=${df}&date_to=${dt}`);
-    const d = await resp.json();
-    if (d.error) { showErr(d.error); return; }
-    DATA = d;
-    document.getElementById('dashboard').style.display = 'block';
+// ── Load data ──────────────────────────────────────────────────────────────
+async function loadData(){
+  const df=document.getElementById('dateFrom').value,dt=document.getElementById('dateTo').value;
+  if(!df||!dt)return;
+  document.getElementById('errBox').style.display='none';
+  try{
+    const r=await fetch(`/data?date_from=${df}&date_to=${dt}`);
+    const d=await r.json();
+    if(d.error){showErr(d.error);return;}
+    DATA=d;
+    document.getElementById('dashboard').style.display='block';
     renderAll();
-  } catch(e) {
-    showErr(e.message);
-  }
+  }catch(e){showErr(e.message);}
 }
 
-function showErr(msg) {
-  const el = document.getElementById('errBox');
-  el.textContent = '⚠️ ' + msg;
-  el.style.display = 'block';
+// ── Render ─────────────────────────────────────────────────────────────────
+function renderAll(){renderQueueTabs();switchQueue('ALL');}
+
+function switchQueue(q){
+  curQueue=q;
+  document.querySelectorAll('.qtab').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.qtab').forEach(c=>{if(c.dataset.q===q)c.classList.add('active');});
+  VIEW=q==='ALL'?DATA.tasks:DATA.tasks.filter(t=>t.queue===q);
+  renderStats();renderFlow();renderTimeline();renderDonut();setFilter(curFilter,null);
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-function renderAll() { renderQueueCards(); switchQueue('ALL'); }
-
-function switchQueue(q) {
-  curQueue = q;
-  document.querySelectorAll('.qcard').forEach((c,i) => {
-    c.classList.toggle('active', ['ALL','POOLING','DOSTAVKAPIKO','UDOSTAVKA'][i] === q);
-  });
-  VIEW = q === 'ALL' ? DATA.tasks : DATA.tasks.filter(t=>t.queue===q);
-  renderStatCards(); renderFlowCards(); renderTimeline(); renderDonut(); setFilter(curFilter,null);
-}
-
-function renderQueueCards() {
-  const all = DATA.tasks, qs = DATA.queues;
-  const card = (name, tasks, label) => {
-    const v1=tasks.filter(t=>t.v1n>0).length, v2=tasks.filter(t=>t.v2n>0).length;
-    return `<div class="qcard" onclick="switchQueue('${name}')">
-      <div class="qcard-name">${label}</div>
-      <div class="qcard-num">${tasks.length}</div>
-      <div class="qcard-meta">
-        <span><span class="dot dt"></span>${v1} АрхКом</span>
-        <span><span class="dot dp"></span>${v2} ТА</span>
-      </div></div>`;
+function renderQueueTabs(){
+  const all=DATA.tasks,qs=DATA.queues;
+  const mk=(q,tasks,label)=>{
+    const v1=tasks.filter(t=>t.v1n>0).length,v2=tasks.filter(t=>t.v2n>0).length;
+    return`<div class="qtab${q==='ALL'?' active':''}" data-q="${q}" onclick="switchQueue('${q}')">
+      <div class="qtab-name">${label}</div>
+      <div class="qtab-num">${tasks.length}</div>
+      <div class="qtab-meta">
+        <span><span class="mdot md-ak"></span>${v1} АрхКом</span>
+        <span><span class="mdot md-ta"></span>${v2} ТА</span>
+      </div>
+    </div>`;
   };
-  document.getElementById('qcards').innerHTML =
-    card('ALL',all,'Все очереди') +
-    ['POOLING','DOSTAVKAPIKO','UDOSTAVKA'].map(q=>card(q,qs[q]?.tasks||[],q)).join('');
+  document.getElementById('queueTabs').innerHTML=
+    mk('ALL',all,'Все очереди')+
+    ['POOLING','DOSTAVKAPIKO','UDOSTAVKA'].map(q=>mk(q,qs[q]?.tasks||[],q)).join('');
 }
 
-function renderStatCards() {
+function renderStats(){
   const t=VIEW;
-  const v1t=t.filter(x=>x.v1n>0).length, v2t=t.filter(x=>x.v2n>0).length;
-  const both=t.filter(x=>x.v1n>0&&x.v2n>0).length, cuts=t.reduce((s,x)=>s+x.total,0);
-  document.getElementById('scards').innerHTML = `
-    <div class="scard sc1"><div class="scard-lbl">К техархам</div><div class="scard-val">${t.length}</div><div class="scard-sub">задач за период</div></div>
-    <div class="scard sc2"><div class="scard-lbl">АрхКом</div><div class="scard-val">${v1t}</div><div class="scard-sub">задач на ревью аналитики</div></div>
-    <div class="scard sc3"><div class="scard-lbl">ТА</div><div class="scard-val">${v2t}</div><div class="scard-sub">задач вернули на уточнение</div></div>
-    <div class="scard sc4"><div class="scard-lbl">Оба типа</div><div class="scard-val">${both}</div><div class="scard-sub">задач с двумя видами</div></div>
-    <div class="scard sc5"><div class="scard-lbl">Всего отсечек</div><div class="scard-val">${cuts}</div><div class="scard-sub">суммарно переходов</div></div>`;
+  const tot=t.length,v1=t.filter(x=>x.v1n>0).length,v2=t.filter(x=>x.v2n>0).length;
+  const both=t.filter(x=>x.v1n>0&&x.v2n>0).length,cuts=t.reduce((s,x)=>s+x.total,0);
+  const cards=[
+    {cls:'sc-a1',icon:'📋',si:'si-a1',label:'К техархам',val:tot,sub:'задач за период'},
+    {cls:'sc-a2',icon:'✅',si:'si-a2',label:'АрхКом',val:v1,sub:'задач на ревью аналитики'},
+    {cls:'sc-a3',icon:'🔴',si:'si-a3',label:'ТА',val:v2,sub:'задач вернули на уточнение'},
+    {cls:'sc-a4',icon:'⚡',si:'si-a4',label:'Оба типа',val:both,sub:'задач с двумя отсечками'},
+    {cls:'sc-a5',icon:'🔁',si:'si-a5',label:'Всего отсечек',val:cuts,sub:'суммарно переходов'},
+  ];
+  document.getElementById('statGrid').innerHTML=cards.map(c=>`
+    <div class="stat-card ${c.cls}">
+      <div class="stat-icon ${c.si}">${c.icon}</div>
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value">${c.val}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join('');
 }
 
-function renderFlowCards() {
-  const t=VIEW, total=t.length;
-  const v1t=t.filter(x=>x.v1n>0).length, v2t=t.filter(x=>x.v2n>0).length;
-  const v1c=t.reduce((s,x)=>s+x.v1n,0), v2c=t.reduce((s,x)=>s+x.v2n,0);
-  const p1=total?Math.round(v1t/total*100):0, p2=total?Math.round(v2t/total*100):0;
-  set('fV1tasks',v1t); set('fV1cuts',v1c); set('fV2tasks',v2t); set('fV2cuts',v2c);
-  setW('mbarV1',p1); set('mbarV1txt',p1+'%'); setW('mbarV2',p2); set('mbarV2txt',p2+'%');
+function renderFlow(){
+  const t=VIEW,tot=t.length;
+  const v1t=t.filter(x=>x.v1n>0).length,v2t=t.filter(x=>x.v2n>0).length;
+  const v1c=t.reduce((s,x)=>s+x.v1n,0),v2c=t.reduce((s,x)=>s+x.v2n,0);
+  const p1=tot?Math.round(v1t/tot*100):0,p2=tot?Math.round(v2t/tot*100):0;
+  set('fAkN',v1t);set('fAkCuts',v1c);set('fTaN',v2t);set('fTaCuts',v2c);
+  setW('fAkBar',p1);set('fAkPct',p1+'%');setW('fTaBar',p2);set('fTaPct',p2+'%');
 }
 
-function fmtDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso+'T00:00:00');
+function fmtDate(iso){
+  if(!iso)return'';
+  const d=new Date(iso+'T00:00:00');
   return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0');
 }
-function weekStart(iso) {
-  const d=new Date(iso+'T00:00:00'), day=d.getDay(), diff=day===0?-6:1-day;
-  d.setDate(d.getDate()+diff); return d.toISOString().slice(0,10);
+function weekStart(iso){
+  const d=new Date(iso+'T00:00:00'),day=d.getDay(),diff=day===0?-6:1-day;
+  d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10);
 }
 
-function renderTimeline() {
-  const tasks=VIEW, dateFrom=DATA.dateFrom, dateTo=DATA.dateTo;
-  const start=new Date(dateFrom+'T00:00:00'), end=new Date(dateTo+'T00:00:00');
-  const sd=start.getDay(), sm=new Date(start); sm.setDate(start.getDate()+(sd===0?-6:1-sd));
+function renderTimeline(){
+  const tasks=VIEW,df=DATA.dateFrom,dt=DATA.dateTo;
+  const s=new Date(df+'T00:00:00'),e=new Date(dt+'T00:00:00');
+  const sd=s.getDay(),sm=new Date(s);sm.setDate(s.getDate()+(sd===0?-6:1-sd));
   const weeks={};
-  for(let c=new Date(sm);c<=end;c.setDate(c.getDate()+7)) weeks[c.toISOString().slice(0,10)]={total:0,v1:0,v2:0};
+  for(let c=new Date(sm);c<=e;c.setDate(c.getDate()+7))weeks[c.toISOString().slice(0,10)]={total:0,v1:0,v2:0};
   for(const t of tasks){
-    if(!t.entryDate) continue;
+    if(!t.entryDate)continue;
     const wk=weekStart(t.entryDate);
-    if(!weeks[wk]) weeks[wk]={total:0,v1:0,v2:0};
-    weeks[wk].total++; if(t.v1n>0) weeks[wk].v1++; if(t.v2n>0) weeks[wk].v2++;
+    if(!weeks[wk])weeks[wk]={total:0,v1:0,v2:0};
+    weeks[wk].total++;if(t.v1n>0)weeks[wk].v1++;if(t.v2n>0)weeks[wk].v2++;
   }
   const labels=Object.keys(weeks).sort();
-  const svgEl=document.getElementById('timelineChart');
-  if(!labels.length){svgEl.innerHTML='<text x="50%" y="50" text-anchor="middle" fill="var(--muted)" font-size="12">Нет данных</text>';return;}
-  const W=svgEl.parentElement.clientWidth-32||600,H=160,padL=32,padR=10,padT=18,padB=28;
+  const svgEl=document.getElementById('timelineSvg');
+  if(!labels.length){svgEl.setAttribute('height','60');svgEl.innerHTML='<text x="50%" y="35" text-anchor="middle" fill="#5a6385" font-size="14" font-family="Inter">Нет данных за период</text>';return;}
+
+  const W=svgEl.parentElement.clientWidth||800;
+  const H=220,padL=44,padR=20,padT=28,padB=44;
   const cw=W-padL-padR,ch=H-padT-padB;
   const maxVal=Math.max(...labels.map(l=>weeks[l].total),1);
   const sx=labels.length>1?cw/(labels.length-1):cw;
-  const lp=field=>labels.map((l,i)=>`${i===0?'M':'L'}${(padL+i*sx).toFixed(1)},${(padT+ch-weeks[l][field]/maxVal*ch).toFixed(1)}`).join(' ');
-  const ap=field=>{
+
+  const lp=(field)=>labels.map((l,i)=>`${i===0?'M':'L'}${(padL+i*sx).toFixed(1)},${(padT+ch-weeks[l][field]/maxVal*ch).toFixed(1)}`).join(' ');
+  const ap=(field)=>{
     const pts=labels.map((l,i)=>`${(padL+i*sx).toFixed(1)},${(padT+ch-weeks[l][field]/maxVal*ch).toFixed(1)}`);
-    return `M ${pts.join(' L ')} L ${(padL+(labels.length-1)*sx).toFixed(1)},${padT+ch} L ${padL},${padT+ch} Z`;
+    return`M ${pts.join(' L ')} L ${(padL+(labels.length-1)*sx).toFixed(1)},${padT+ch} L ${padL},${padT+ch} Z`;
   };
-  const grids=Array.from({length:5},(_,i)=>{const y=padT+ch-i/4*ch,v=Math.round(i/4*maxVal);
-    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/><text x="${padL-4}" y="${(y+3).toFixed(1)}" text-anchor="end" fill="var(--muted)" font-size="9">${v}</text>`;}).join('');
-  const step=labels.length>10?2:1;
-  const xls=labels.map((l,i)=>i%step&&i!==labels.length-1?'':
-    `<text x="${(padL+i*sx).toFixed(1)}" y="${H-4}" text-anchor="middle" fill="var(--muted)" font-size="9">${fmtDate(l)}</text>`).join('');
-  const dots=labels.map((l,i)=>{const x=(padL+i*sx).toFixed(1),y=(padT+ch-weeks[l].total/maxVal*ch).toFixed(1);
-    return `<circle cx="${x}" cy="${y}" r="3" fill="var(--a1)" stroke="var(--bg)" stroke-width="1.5"><title>${fmtDate(l)}: ${weeks[l].total}</title></circle>`;}).join('');
+
+  // gridlines
+  const grids=Array.from({length:5},(_,i)=>{
+    const y=(padT+ch-i/4*ch).toFixed(1),v=Math.round(i/4*maxVal);
+    return`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#252d47" stroke-width="1"/>
+    <text x="${padL-8}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#5a6385" font-size="11" font-family="Inter">${v}</text>`;
+  }).join('');
+
+  // x labels — show every n-th
+  const maxLabels=Math.floor(cw/60);
+  const step=Math.max(1,Math.ceil(labels.length/maxLabels));
+  const xlabels=labels.map((l,i)=>{
+    if(i%step!==0&&i!==labels.length-1)return'';
+    return`<text x="${(padL+i*sx).toFixed(1)}" y="${H-10}" text-anchor="middle" fill="#5a6385" font-size="11" font-family="Inter">${fmtDate(l)}</text>`;
+  }).join('');
+
+  // dots
+  const dots=labels.map((l,i)=>{
+    const x=(padL+i*sx).toFixed(1),y=(padT+ch-weeks[l].total/maxVal*ch).toFixed(1);
+    return`<circle cx="${x}" cy="${y}" r="4" fill="#6c63ff" stroke="#0a0c14" stroke-width="2"><title>${fmtDate(l)}: ${weeks[l].total}</title></circle>`;
+  }).join('');
+
   svgEl.setAttribute('width',W);svgEl.setAttribute('height',H);svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);
   svgEl.innerHTML=`<defs>
-    <linearGradient id="ga1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--a1)" stop-opacity=".2"/><stop offset="100%" stop-color="var(--a1)" stop-opacity="0"/></linearGradient>
-    <linearGradient id="ga2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--a2)" stop-opacity=".1"/><stop offset="100%" stop-color="var(--a2)" stop-opacity="0"/></linearGradient>
-    <linearGradient id="ga3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--a3)" stop-opacity=".1"/><stop offset="100%" stop-color="var(--a3)" stop-opacity="0"/></linearGradient>
-  </defs>${grids}
-  <path d="${ap('total')}" fill="url(#ga1)"/>
-  <path d="${ap('v1')}" fill="url(#ga2)"/>
-  <path d="${ap('v2')}" fill="url(#ga3)"/>
-  <path d="${lp('total')}" fill="none" stroke="var(--a1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="${lp('v1')}"    fill="none" stroke="var(--a2)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2"/>
-  <path d="${lp('v2')}"    fill="none" stroke="var(--a3)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2"/>
-  ${dots}${xls}
-  <circle cx="${padL}" cy="${padT-6}" r="3" fill="var(--a1)"/><text x="${padL+8}" y="${padT-2}" fill="var(--a1)" font-size="9" font-weight="600">Всего</text>
-  <circle cx="${padL+46}" cy="${padT-6}" r="3" fill="var(--a2)"/><text x="${padL+54}" y="${padT-2}" fill="var(--a2)" font-size="9" font-weight="600">АрхКом</text>
-  <circle cx="${padL+108}" cy="${padT-6}" r="3" fill="var(--a3)"/><text x="${padL+116}" y="${padT-2}" fill="var(--a3)" font-size="9" font-weight="600">ТА</text>`;
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6c63ff" stop-opacity=".25"/><stop offset="100%" stop-color="#6c63ff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c9a7" stop-opacity=".15"/><stop offset="100%" stop-color="#00c9a7" stop-opacity="0"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff4d6d" stop-opacity=".15"/><stop offset="100%" stop-color="#ff4d6d" stop-opacity="0"/></linearGradient>
+  </defs>
+  ${grids}
+  <path d="${ap('total')}" fill="url(#g1)"/>
+  <path d="${ap('v1')}" fill="url(#g2)"/>
+  <path d="${ap('v2')}" fill="url(#g3)"/>
+  <path d="${lp('total')}" fill="none" stroke="#6c63ff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="${lp('v1')}"    fill="none" stroke="#00c9a7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5,3"/>
+  <path d="${lp('v2')}"    fill="none" stroke="#ff4d6d" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5,3"/>
+  ${dots}${xlabels}
+  <circle cx="${padL}" cy="${padT-10}" r="5" fill="#6c63ff"/>
+  <text x="${padL+12}" y="${padT-5}" fill="#6c63ff" font-size="12" font-weight="600" font-family="Inter">Всего</text>
+  <circle cx="${padL+68}" cy="${padT-10}" r="5" fill="#00c9a7"/>
+  <text x="${padL+80}" y="${padT-5}" fill="#00c9a7" font-size="12" font-weight="600" font-family="Inter">АрхКом</text>
+  <circle cx="${padL+152}" cy="${padT-10}" r="5" fill="#ff4d6d"/>
+  <text x="${padL+164}" y="${padT-5}" fill="#ff4d6d" font-size="12" font-weight="600" font-family="Inter">ТА</text>`;
 }
 
-function renderDonut() {
-  const tasks=VIEW, groups={};
+function renderDonut(){
+  const tasks=VIEW,groups={};
   for(const t of tasks){const k=String(t.total);if(!groups[k])groups[k]=[];groups[k].push(t);}
-  const keys=Object.keys(groups).map(Number).sort((a,b)=>a-b), total=tasks.length;
-  if(!total){document.getElementById('donutSvg').innerHTML='<text x="90" y="95" text-anchor="middle" fill="var(--muted)" font-size="11">Нет данных</text>';document.getElementById('donutLegend').innerHTML='';return;}
-  const R=80,r=47,cx=90,cy=90;let angle=-Math.PI/2,svg='',leg='';
+  const keys=Object.keys(groups).map(Number).sort((a,b)=>a-b),total=tasks.length;
+  if(!total){
+    document.getElementById('donutSvg').innerHTML='<text x="110" y="115" text-anchor="middle" fill="#5a6385" font-size="14" font-family="Inter">Нет данных</text>';
+    document.getElementById('donutLegend').innerHTML='';return;
+  }
+  const R=95,r=58,cx=110,cy=110;
+  let angle=-Math.PI/2,svg='',leg='';
   keys.forEach((k,i)=>{
     const count=groups[k].length,frac=count/total,sweep=frac*2*Math.PI;
-    const x1=cx+R*Math.cos(angle),y1=cy+R*Math.sin(angle); angle+=sweep;
+    const x1=cx+R*Math.cos(angle),y1=cy+R*Math.sin(angle);angle+=sweep;
     const x2=cx+R*Math.cos(angle),y2=cy+R*Math.sin(angle);
     const xi1=cx+r*Math.cos(angle-sweep),yi1=cy+r*Math.sin(angle-sweep);
     const xi2=cx+r*Math.cos(angle),yi2=cy+r*Math.sin(angle);
     const large=sweep>Math.PI?1:0,col=COLORS[i%COLORS.length];
     const lbl=k===0?'Без отсечек':k===1?'1 отсечка':`${k} отсечки`;
     const fa=k===0?'none':`cuts${k}`;
-    svg+=`<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R},0,${large},1,${x2.toFixed(1)},${y2.toFixed(1)} L${xi2.toFixed(1)},${yi2.toFixed(1)} A${r},${r},0,${large},0,${xi1.toFixed(1)},${yi1.toFixed(1)} Z" fill="${col}" opacity=".88" style="cursor:pointer" onclick="setFilter('${fa}',null)"><title>${lbl}: ${count}</title></path>`;
-    leg+=`<div class="dleg-row" onclick="setFilter('${fa}',null)"><div class="dleg-dot" style="background:${col}"></div><div class="dleg-label" style="color:${col}">${lbl}</div><div class="dleg-n" style="color:${col}">${count}</div><div class="dleg-pct">${Math.round(frac*100)}%</div></div>`;
+    svg+=`<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R},0,${large},1,${x2.toFixed(1)},${y2.toFixed(1)} L${xi2.toFixed(1)},${yi2.toFixed(1)} A${r},${r},0,${large},0,${xi1.toFixed(1)},${yi1.toFixed(1)} Z"
+      fill="${col}" opacity=".9" style="cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.9"
+      onclick="setFilter('${fa}',null)"><title>${lbl}: ${count} задач</title></path>`;
+    leg+=`<div class="dleg" onclick="setFilter('${fa}',null)">
+      <div class="dleg-dot" style="background:${col}"></div>
+      <div class="dleg-text">
+        <div class="dleg-name" style="color:${col}">${lbl}</div>
+        <div class="dleg-count">${count} задач</div>
+      </div>
+      <div>
+        <div class="dleg-val" style="color:${col}">${count}</div>
+        <div class="dleg-pct">${Math.round(frac*100)}%</div>
+      </div>
+    </div>`;
   });
   const wc=tasks.filter(t=>t.total>0).length;
-  svg+=`<text x="90" y="87" text-anchor="middle" fill="var(--text)" font-size="18" font-weight="800">${wc}</text><text x="90" y="103" text-anchor="middle" fill="var(--muted)" font-size="9">с отсечками</text>`;
+  svg+=`<text x="110" y="104" text-anchor="middle" fill="#f0f2ff" font-size="28" font-weight="900" font-family="Inter">${wc}</text>
+        <text x="110" y="124" text-anchor="middle" fill="#5a6385" font-size="12" font-family="Inter">с отсечками</text>`;
   document.getElementById('donutSvg').innerHTML=svg;
   document.getElementById('donutLegend').innerHTML=leg;
 }
@@ -484,40 +608,42 @@ function renderDonut() {
 function setFilter(f,btn){
   curFilter=f;
   document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+  if(btn)btn.classList.add('active');
   else document.querySelectorAll('.ftab').forEach(b=>{if(b.dataset.f===f)b.classList.add('active');});
   renderTable();
 }
 
 function renderTable(){
-  const f=curFilter;
-  let rows=VIEW;
-  if(f==='v1') rows=rows.filter(t=>t.v1n>0&&t.v2n===0);
-  else if(f==='v2') rows=rows.filter(t=>t.v2n>0&&t.v1n===0);
-  else if(f==='both') rows=rows.filter(t=>t.v1n>0&&t.v2n>0);
-  else if(f==='none') rows=rows.filter(t=>t.total===0);
-  else if(f==='multi') rows=rows.filter(t=>t.total>=2);
+  const f=curFilter;let rows=VIEW;
+  if(f==='v1')rows=rows.filter(t=>t.v1n>0&&t.v2n===0);
+  else if(f==='v2')rows=rows.filter(t=>t.v2n>0&&t.v1n===0);
+  else if(f==='both')rows=rows.filter(t=>t.v1n>0&&t.v2n>0);
+  else if(f==='none')rows=rows.filter(t=>t.total===0);
+  else if(f==='multi')rows=rows.filter(t=>t.total>=2);
   else if(f&&f.startsWith('cuts')){const n=parseInt(f.slice(4));rows=rows.filter(t=>t.total===n);}
   rows=[...rows].sort((a,b)=>b.total-a.total||a.key.localeCompare(b.key));
   set('tcount',`(${rows.length})`);
-  if(!rows.length){document.getElementById('tableWrap').innerHTML=`<div class="empty">Нет задач для фильтра</div>`;return;}
+  if(!rows.length){document.getElementById('tableWrap').innerHTML=`<div class="empty-state">Нет задач для выбранного фильтра</div>`;return;}
   const badge=t=>{
-    if(t.v1n>0&&t.v2n>0) return`<span class="badge bboth">АрхКом+ТА</span>`;
-    if(t.v1n>0) return`<span class="badge bv1">АрхКом</span>`;
-    if(t.v2n>0) return`<span class="badge bv2">ТА</span>`;
-    return`<span class="badge bnone">—</span>`;
+    if(t.v1n>0&&t.v2n>0)return`<span class="badge b-both">АрхКом + ТА</span>`;
+    if(t.v1n>0)return`<span class="badge b-ak">АрхКом</span>`;
+    if(t.v2n>0)return`<span class="badge b-ta">ТА</span>`;
+    return`<span class="badge b-none">—</span>`;
   };
   document.getElementById('tableWrap').innerHTML=`<table>
-    <thead><tr><th>Ключ</th><th>Название</th><th>Очередь</th><th>Дата входа</th><th>Тип</th><th>АрхКом</th><th>ТА</th><th>Итого</th></tr></thead>
+    <thead><tr>
+      <th>Ключ</th><th>Название</th><th>Очередь</th><th>Дата входа</th><th>Тип</th>
+      <th style="text-align:center">АрхКом</th><th style="text-align:center">ТА</th><th style="text-align:center">Итого</th>
+    </tr></thead>
     <tbody>${rows.map(t=>`<tr>
-      <td><a href="${t.url}" target="_blank">${t.key}</a></td>
-      <td class="ttitle">${esc(t.title)}</td>
-      <td style="color:var(--muted);font-size:10px">${t.queue}</td>
-      <td style="color:var(--muted);font-size:10px">${fmtDate(t.entryDate)}</td>
+      <td class="td-key"><a href="${t.url}" target="_blank">${t.key}</a></td>
+      <td class="td-title">${esc(t.title)}</td>
+      <td class="td-queue">${t.queue}</td>
+      <td class="td-date">${fmtDate(t.entryDate)}</td>
       <td>${badge(t)}</td>
-      <td class="ncell" style="color:var(--a2)">${t.v1n||'—'}</td>
-      <td class="ncell" style="color:var(--a3)">${t.v2n||'—'}</td>
-      <td class="ncell" style="color:var(--a4)">${t.total||'—'}</td>
+      <td class="td-num n-ak">${t.v1n||'—'}</td>
+      <td class="td-num n-ta">${t.v2n||'—'}</td>
+      <td class="td-num n-tot">${t.total||'—'}</td>
     </tr>`).join('')}</tbody></table>`;
 }
 
@@ -525,10 +651,7 @@ function set(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 function setW(id,p){const e=document.getElementById(id);if(e)e.style.width=p+'%';}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-initDates();
-loadSyncInfo();
-// Auto-load if DB has data
-loadData();
+initDates();loadSyncInfo();loadData();
 </script>
 </body>
 </html>
