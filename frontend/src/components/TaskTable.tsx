@@ -12,8 +12,8 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "v1",    label: "АрхКом" },
   { key: "v2",    label: "ТА" },
   { key: "both",  label: "Оба" },
-  { key: "none",  label: "Без отсечек" },
-  { key: "multi", label: "2+ отсечки" },
+  { key: "none",  label: "С первого раза" },
+  { key: "multi", label: "2+ возврата" },
 ]
 
 function fmtDate(iso: string | null): string {

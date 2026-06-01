@@ -106,7 +106,7 @@ export default function App() {
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-base">🏛</div>
             <div>
               <p className="text-sm font-bold leading-none">Арх. комитет</p>
-              <p className="text-[11px] text-muted-foreground leading-none mt-0.5">Аналитика отсечек</p>
+              <p className="text-[11px] text-muted-foreground leading-none mt-0.5">Аналитика возвратов</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -224,8 +224,8 @@ export default function App() {
                 <StatCard label="К техархам"   value={total}   sub="задач за период"           icon="📋" color="purple" />
                 <StatCard label="АрхКом"        value={v1tasks} sub="задач на ревью аналитики"  icon="✅" color="teal" />
                 <StatCard label="ТА"            value={v2tasks} sub="задач вернули на уточнение" icon="🔴" color="rose" />
-                <StatCard label="Оба типа"      value={both}    sub="задач с двумя отсечками"    icon="⚡" color="amber" />
-                <StatCard label="Всего отсечек" value={cuts}    sub="суммарно переходов"         icon="🔁" color="sky" />
+                <StatCard label="Оба типа"      value={both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" />
+                <StatCard label="Всего возвратов" value={cuts}  sub="суммарно переходов"         icon="🔁" color="sky" />
               </div>
             )}
 
@@ -239,8 +239,8 @@ export default function App() {
               <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
                 <FunnelChart tasks={view} />
                 <div className="grid grid-cols-1 gap-4">
-                  <FlowCard type="ak" taskCount={v1tasks} cutCount={v1cuts} totalTasks={total} />
-                  <FlowCard type="ta" taskCount={v2tasks} cutCount={v2cuts} totalTasks={total} />
+                  <FlowCard type="ak" tasks={view} totalTasks={total} />
+                  <FlowCard type="ta" tasks={view} totalTasks={total} />
                 </div>
               </div>
             )}
