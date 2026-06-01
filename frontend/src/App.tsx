@@ -232,7 +232,7 @@ export default function App() {
               </div>
             ) : data && (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <StatCard label="К техархам"   value={total}   sub="задач за период"           icon="📋" color="purple" />
+                <StatCard label="Пришло в АрхКом" value={total} sub="задач за период"           icon="📋" color="purple" />
                 <StatCard label="АрхКом"        value={v1tasks} sub="задач на ревью аналитики"  icon="✅" color="teal" />
                 <StatCard label="ТА"            value={v2tasks} sub="задач вернули на уточнение" icon="🔴" color="rose" />
                 <StatCard label="Оба типа"      value={both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" />

@@ -16,7 +16,7 @@ export function FunnelChart({ tasks }: FunnelChartProps) {
 
   const rows = [
     {
-      label: "Пришло к техархам",
+      label: "Пришло в АрхКом",
       count: total,
       pct: 100,
       color: "bg-[hsl(var(--chart-1))]",
