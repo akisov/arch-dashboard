@@ -23,10 +23,10 @@ function fmtDate(iso: string | null): string {
 }
 
 function plural(n: number) {
-  const mod10 = n % 10, mod100 = n % 100
-  if (mod100 >= 11 && mod100 <= 19) return "задач"
-  if (mod10 === 1) return "задача"
-  if (mod10 >= 2 && mod10 <= 4) return "задачи"
+  const m10 = n % 10, m100 = n % 100
+  if (m100 >= 11 && m100 <= 19) return "задач"
+  if (m10 === 1) return "задача"
+  if (m10 >= 2 && m10 <= 4) return "задачи"
   return "задач"
 }
 
@@ -63,21 +63,21 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
     return <Badge variant="secondary">✓ Ок</Badge>
   }
 
+  const th = "py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap"
+  const td = "py-3 text-sm"
+
   return (
     <Card className="overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-border flex-wrap">
+      <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-border flex-wrap">
         <div>
           <span className="text-sm font-bold text-foreground">Задачи</span>
-          <span className="ml-2 text-xs text-muted-foreground">
-            {sorted.length} {plural(sorted.length)}
-          </span>
+          <span className="ml-2 text-xs text-muted-foreground">{sorted.length} {plural(sorted.length)}</span>
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {FILTERS.map(f => (
             <button key={f.key} onClick={() => onFilter(f.key)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all",
+                "px-3 py-1 rounded-lg text-xs font-semibold border transition-all",
                 activeFilter === f.key
                   ? "bg-primary border-primary text-primary-foreground"
                   : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground bg-transparent"
@@ -88,67 +88,57 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         {sorted.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground text-sm">
-            Нет задач для выбранного фильтра
-          </div>
+          <div className="py-14 text-center text-muted-foreground text-sm">Нет задач для выбранного фильтра</div>
         ) : (
-          <table className="w-full">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-secondary/50">
-                <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Ключ</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Название</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Очередь</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Дата входа</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Тип</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">АрхКом</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">ТА</th>
-                <th className="col-total py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap cursor-pointer select-none"
-                  onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}>
-                  <span className="inline-flex items-center gap-1">
-                    Итого <ArrowUpDown className="w-3 h-3" />
-                  </span>
+              <tr className="bg-secondary/50 border-b border-border">
+                <th className={cn(th, "text-left pl-5 pr-2 w-[130px]")}>Ключ</th>
+                <th className={cn(th, "text-left px-2")}>Название</th>
+                <th className={cn(th, "text-left px-2 w-[80px]")}>Дата</th>
+                <th className={cn(th, "text-left px-2 w-[120px]")}>Тип</th>
+                <th className={cn(th, "text-center px-2 w-[70px]")}>АрхКом</th>
+                <th className={cn(th, "text-center px-2 w-[50px]")}>ТА</th>
+                <th
+                  className={cn(th, "text-center px-2 cursor-pointer select-none w-[80px]")}
+                  style={{ paddingRight: 20 }}
+                  onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}
+                >
+                  <span className="inline-flex items-center gap-1">Итого <ArrowUpDown className="w-3 h-3" /></span>
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {sorted.map(t => (
                 <tr key={t.key} className="hover:bg-secondary/30 transition-colors group">
-                  <td className="px-6 py-4">
+                  <td className={cn(td, "pl-5 pr-2")}>
                     <a href={t.url} target="_blank" rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 text-primary font-mono text-xs font-bold hover:underline whitespace-nowrap">
+                      className="inline-flex items-center gap-1 text-primary font-mono text-xs font-bold hover:underline whitespace-nowrap">
                       {t.key}
-                      <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+                      <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-70 transition-opacity shrink-0" />
                     </a>
                   </td>
-                  <td className="px-4 py-4 text-sm text-foreground max-w-xs">
-                    <span className="line-clamp-2 leading-snug">{t.title}</span>
+                  <td className={cn(td, "px-2 max-w-[200px]")}>
+                    <span className="line-clamp-2 leading-snug text-foreground">{t.title}</span>
                   </td>
-                  <td className="px-4 py-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{t.queue}</span>
-                  </td>
-                  <td className="px-4 py-4 text-sm text-muted-foreground tabular-nums whitespace-nowrap">
+                  <td className={cn(td, "px-2 text-muted-foreground tabular-nums text-xs whitespace-nowrap")}>
                     {fmtDate(t.entryDate)}
                   </td>
-                  <td className="px-4 py-4">{badge(t)}</td>
-                  <td className="px-4 py-4 text-center">
-                    <span className="text-base font-black tabular-nums text-emerald-600 dark:text-emerald-400">
-                      {t.v1n || <span className="text-muted-foreground/40 font-normal text-sm">—</span>}
-                    </span>
+                  <td className={cn(td, "px-2")}>{badge(t)}</td>
+                  <td className={cn(td, "px-2 text-center font-black tabular-nums text-base text-emerald-600 dark:text-emerald-400")}>
+                    {t.v1n || <span className="text-muted-foreground/30 font-normal text-sm">—</span>}
                   </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className="text-base font-black tabular-nums text-rose-600 dark:text-rose-400">
-                      {t.v2n || <span className="text-muted-foreground/40 font-normal text-sm">—</span>}
-                    </span>
+                  <td className={cn(td, "px-2 text-center font-black tabular-nums text-base text-rose-600 dark:text-rose-400")}>
+                    {t.v2n || <span className="text-muted-foreground/30 font-normal text-sm">—</span>}
                   </td>
-                  <td className="col-total py-4">
+                  <td className={cn(td, "px-2 text-center")} style={{ paddingRight: 20 }}>
                     {t.total > 0
-                      ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-black tabular-nums">
+                      ? <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-black">
                           {t.total}
                         </span>
-                      : <span className="text-muted-foreground/40 font-normal text-sm">—</span>
+                      : <span className="text-muted-foreground/30 text-sm">—</span>
                     }
                   </td>
                 </tr>
