@@ -72,15 +72,13 @@ export function FunnelChart({ tasks }: FunnelChartProps) {
               </div>
 
               {/* Bar */}
-              <div className="relative h-9 rounded-lg bg-secondary overflow-hidden">
+              <div className="relative h-6 rounded-lg bg-secondary overflow-hidden">
                 <div
-                  className={`absolute inset-y-0 left-0 rounded-lg transition-all duration-700 ease-out ${row.color} opacity-90`}
+                  className={`absolute inset-y-0 left-0 rounded-lg transition-all duration-700 ease-out ${row.color} opacity-80`}
                   style={{ width: `${Math.max(row.pct, row.count > 0 ? 3 : 0)}%` }}
                 />
-                <div className="absolute inset-0 flex items-center px-3">
-                  <span className="text-xs text-muted-foreground">{row.desc}</span>
-                </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-1">{row.desc}</p>
             </div>
           ))}
         </div>
