@@ -175,44 +175,49 @@ export default function App() {
 
       <main className="max-w-screen-xl mx-auto px-6 py-8 space-y-6">
         {/* Page header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">Аналитика переходов</h1>
-            <p className="text-sm text-muted-foreground mt-1">Story-задачи · POOLING · DOSTAVKAPIKO · UDOSTAVKA</p>
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">Аналитика переходов</h1>
+          <p className="text-sm text-muted-foreground mt-1">Story-задачи · POOLING · DOSTAVKAPIKO · UDOSTAVKA</p>
+        </div>
+
+        {/* Period controls — own row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Presets */}
+          <div className="flex gap-1 bg-card border border-border rounded-lg p-1">
+            {PRESETS.map(p => (
+              <button key={p.label}
+                onClick={() => { const d = p.getDates(); setDates(d); setActivePreset(p.label); load(d.from, d.to) }}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap",
+                  activePreset === p.label
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                )}>
+                {p.label}
+              </button>
+            ))}
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Пресеты */}
-            <div className="flex gap-1 bg-card border border-border rounded-lg p-1">
-              {PRESETS.map(p => (
-                <button key={p.label}
-                  onClick={() => { const d = p.getDates(); setDates(d); setActivePreset(p.label); load(d.from, d.to) }}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
-                    activePreset === p.label
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  )}>
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            {/* Date picker */}
-            <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 h-10">
-              <span className="text-xs text-muted-foreground">с</span>
-              <input type="date" value={dates.from}
-                onChange={e => { setDates(d => ({ ...d, from: e.target.value })); setActivePreset("") }}
-                className="bg-transparent border-none text-sm text-foreground outline-none w-28 [color-scheme:dark]" />
-              <span className="text-muted-foreground">—</span>
-              <span className="text-xs text-muted-foreground">по</span>
-              <input type="date" value={dates.to}
-                onChange={e => { setDates(d => ({ ...d, to: e.target.value })); setActivePreset("") }}
-                className="bg-transparent border-none text-sm text-foreground outline-none w-28 [color-scheme:dark]" />
-            </div>
-            <Button onClick={() => load(dates.from, dates.to)} disabled={loading || syncing}>
-              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
-              Показать
-            </Button>
+
+          {/* Divider */}
+          <div className="h-6 w-px bg-border" />
+
+          {/* Date range */}
+          <div className="flex items-center gap-1.5 bg-card border border-border rounded-lg px-3 h-9">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">с</span>
+            <input type="date" value={dates.from}
+              onChange={e => { setDates(d => ({ ...d, from: e.target.value })); setActivePreset("") }}
+              className="bg-transparent border-none text-sm text-foreground outline-none w-[110px] [color-scheme:light] dark:[color-scheme:dark]" />
+            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">по</span>
+            <input type="date" value={dates.to}
+              onChange={e => { setDates(d => ({ ...d, to: e.target.value })); setActivePreset("") }}
+              className="bg-transparent border-none text-sm text-foreground outline-none w-[110px] [color-scheme:light] dark:[color-scheme:dark]" />
           </div>
+
+          <Button onClick={() => load(dates.from, dates.to)} disabled={loading || syncing}>
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+            Показать
+          </Button>
         </div>
 
         {/* Sync info */}
