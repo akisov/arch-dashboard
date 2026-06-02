@@ -14,9 +14,9 @@ TURSO_URL     = os.environ.get("TURSO_URL", "").replace("libsql://", "https://")
 TURSO_TOKEN   = os.environ.get("TURSO_TOKEN", "")
 
 QUEUES       = ["POOLING", "DOSTAVKAPIKO", "UDOSTAVKA"]
-ENTRY_STATUS = "180"   # analiticeskaaProrabotkaGotovo
-V1_FROM, V1_TO = "180", "151"   # АрхКом
-V2_FROM, V2_TO = "145", "132"   # ТА
+ENTRY_STATUS = "180"   # analiticeskaaProrabotkaGotovo — задача пришла к техархам
+V1_FROM, V1_TO = "180", "151"   # АрхКом: аналит.проработка готово → ревью аналитики
+V2_FROM, V2_TO = "145", "175"   # ТА: согласование архитектуры → доработка (modification)
 
 # ── Turso HTTP client ─────────────────────────────────────────────────────────
 

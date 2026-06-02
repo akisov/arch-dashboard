@@ -43,7 +43,7 @@ export function FunnelChart({ tasks }: FunnelChartProps) {
       textColor: "text-[hsl(var(--chart-3))]",
       bg: "bg-[hsl(var(--chart-3))/0.08]",
       icon: "↩️",
-      desc: "Возвращено на уточнение техническим архитектором",
+      desc: "Возвращено на доработку техническим архитектором",
     },
   ]
 
