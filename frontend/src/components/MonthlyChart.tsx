@@ -117,7 +117,7 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
             {/* Right: percent */}
             <YAxis yAxisId="pct" orientation="right" tick={{fill:axisColor,fontSize:11}} axisLine={false} tickLine={false}
               tickFormatter={v=>`${v}%`} domain={[0,100]} width={36}/>
-            <Tooltip content={<CustomTooltip/>} cursor={{fill:isDark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.03)",radius:4}}/>
+            <Tooltip content={<CustomTooltip/>} cursor={false}/>
 
             {/* Пришло — абсолют, левая ось */}
             <Bar yAxisId="abs" dataKey="total" name="Пришло" radius={[4,4,0,0]} cursor="pointer" onClick={handleClick}>
@@ -166,18 +166,25 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
                   {([
-                    ["all", `Все (${selected.total})`,  "bg-primary border-primary text-primary-foreground",          "border-border text-muted-foreground"],
-                    ["ak",  `АрхКом (${selected.ak})`,  "border-transparent text-white",                              "border-border text-muted-foreground"],
-                    ["ta",  `ТА (${selected.ta})`,      "border-transparent text-white",                              "border-border text-muted-foreground"],
-                  ] as const).map(([k,l,activeClass])=>(
-                    <button key={k} onClick={()=>setTabFilter(k)}
-                      style={tabFilter===k && k==="ak" ? {background:AK,borderColor:AK} :
-                             tabFilter===k && k==="ta" ? {background:TA,borderColor:TA} : {}}
-                      className={cn("px-2.5 py-1 rounded-md text-xs font-semibold border transition-all",
-                        tabFilter===k ? (k==="all"?activeClass:"text-white") : "border-border text-muted-foreground hover:text-foreground bg-transparent")}>
-                      {l}
-                    </button>
-                  ))}
+                    ["all", `Все (${selected.total})`],
+                    ["ak",  `АрхКом (${selected.ak})`],
+                    ["ta",  `ТА (${selected.ta})`],
+                  ] as const).map(([k,l])=>{
+                    const isActive = tabFilter===k
+                    const activeStyle = k==="ak" ? {background:AK,borderColor:AK,color:"#fff"}
+                                      : k==="ta" ? {background:TA,borderColor:TA,color:"#fff"}
+                                      : {} // "all" uses Tailwind primary
+                    return (
+                      <button key={k} onClick={()=>setTabFilter(k)}
+                        style={isActive ? activeStyle : {}}
+                        className={cn("px-2.5 py-1 rounded-md text-xs font-semibold border transition-all",
+                          isActive && k==="all" ? "bg-primary border-primary text-primary-foreground"
+                          : isActive ? ""
+                          : "border-border text-muted-foreground hover:text-foreground bg-transparent")}>
+                        {l}
+                      </button>
+                    )
+                  })}
                 </div>
                 <button onClick={()=>setSelectedIdx(null)} className="text-muted-foreground hover:text-foreground transition-colors ml-1">
                   <X className="w-4 h-4"/>
