@@ -123,8 +123,7 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
             <Bar yAxisId="abs" dataKey="total" name="Пришло" radius={[4,4,0,0]} cursor="pointer" onClick={handleClick}>
               {data.map((_,i)=>(
                 <Cell key={i} fill={TOTAL}
-                  fillOpacity={selectedIdx===null?0.5:selectedIdx===i?0.9:0.2}
-                  stroke={selectedIdx===i?TOTAL:"none"} strokeWidth={2}/>
+                  fillOpacity={selectedIdx===null?0.5:selectedIdx===i?0.9:0.2}/>
               ))}
             </Bar>
 
@@ -132,8 +131,7 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
             <Bar yAxisId="pct" dataKey="akPct" name="АрхКом %" radius={[4,4,0,0]} cursor="pointer" onClick={handleClick}>
               {data.map((_,i)=>(
                 <Cell key={i} fill={AK}
-                  fillOpacity={selectedIdx===null?0.85:selectedIdx===i?1:0.3}
-                  stroke={selectedIdx===i?AK:"none"} strokeWidth={2}/>
+                  fillOpacity={selectedIdx===null?0.85:selectedIdx===i?1:0.3}/>
               ))}
             </Bar>
 
@@ -141,8 +139,7 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
             <Bar yAxisId="pct" dataKey="taPct" name="ТА %" radius={[4,4,0,0]} cursor="pointer" onClick={handleClick}>
               {data.map((_,i)=>(
                 <Cell key={i} fill={TA}
-                  fillOpacity={selectedIdx===null?0.85:selectedIdx===i?1:0.3}
-                  stroke={selectedIdx===i?TA:"none"} strokeWidth={2}/>
+                  fillOpacity={selectedIdx===null?0.85:selectedIdx===i?1:0.3}/>
               ))}
             </Bar>
           </BarChart>
@@ -168,11 +165,16 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  {([["all",`Все (${selected.total})`],["ak",`АрхКом (${selected.ak})`],["ta",`ТА (${selected.ta})`]] as const).map(([k,l])=>(
+                  {([
+                    ["all", `Все (${selected.total})`,  "bg-primary border-primary text-primary-foreground",          "border-border text-muted-foreground"],
+                    ["ak",  `АрхКом (${selected.ak})`,  "border-transparent text-white",                              "border-border text-muted-foreground"],
+                    ["ta",  `ТА (${selected.ta})`,      "border-transparent text-white",                              "border-border text-muted-foreground"],
+                  ] as const).map(([k,l,activeClass])=>(
                     <button key={k} onClick={()=>setTabFilter(k)}
+                      style={tabFilter===k && k==="ak" ? {background:AK,borderColor:AK} :
+                             tabFilter===k && k==="ta" ? {background:TA,borderColor:TA} : {}}
                       className={cn("px-2.5 py-1 rounded-md text-xs font-semibold border transition-all",
-                        tabFilter===k?"bg-primary border-primary text-primary-foreground"
-                                   :"border-border text-muted-foreground hover:text-foreground bg-transparent")}>
+                        tabFilter===k ? (k==="all"?activeClass:"text-white") : "border-border text-muted-foreground hover:text-foreground bg-transparent")}>
                       {l}
                     </button>
                   ))}

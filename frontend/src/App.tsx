@@ -178,7 +178,7 @@ export default function App() {
         {/* Page header */}
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground">Аналитика переходов</h1>
-          <p className="text-sm text-muted-foreground mt-1">Story-задачи · POOLING · DOSTAVKAPIKO · UDOSTAVKA</p>
+          <p className="text-sm text-muted-foreground mt-1">Story · Аналитика · ТехДолг · Улучшение · POOLING · DOSTAVKAPIKO · UDOSTAVKA</p>
         </div>
 
         {/* Period controls — own row */}
