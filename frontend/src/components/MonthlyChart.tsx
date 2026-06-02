@@ -151,7 +151,6 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
 
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={data} margin={{top:4,right:40,left:-20,bottom:0}} barCategoryGap="30%" barGap={3}
-              onClick={handleClick} style={{cursor:"pointer"}}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onMouseMove={(s:any)=>setHoveredLabel(s?.activeLabel??null)}
               onMouseLeave={()=>setHoveredLabel(null)}>
@@ -160,19 +159,25 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
               <YAxis yAxisId="left" tick={{fill:axisColor,fontSize:11}} axisLine={false} tickLine={false} allowDecimals={false}/>
               <YAxis yAxisId="right" orientation="right" tick={{fill:axisColor,fontSize:11}} axisLine={false} tickLine={false}
                 tickFormatter={v=>`${v}%`} domain={[0,100]}/>
-              <Tooltip content={<CustomTooltip/>} cursor={{fill:isDark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.03)",radius:4}}/>
+              <Tooltip content={<CustomTooltip/>} cursor={{fill:"transparent"}}/>
 
-              <Bar yAxisId="left" dataKey="total" radius={[4,4,0,0]}>
+              <Bar yAxisId="left" dataKey="total" radius={[4,4,0,0]} cursor="pointer"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onClick={(entry:any)=>{ if(entry?.label && Array.isArray(entry?.tasks)) setSelected(entry as MonthData) }}>
                 {data.map((d,i)=><Cell key={i} fill={COL.total}
-                  fillOpacity={hoveredLabel===null?0.55:hoveredLabel===d.label?0.85:0.3}/>)}
+                  fillOpacity={hoveredLabel===null?0.55:hoveredLabel===d.label?0.9:0.25}/>)}
               </Bar>
-              <Bar yAxisId="right" dataKey="akPct" radius={[4,4,0,0]}>
+              <Bar yAxisId="right" dataKey="akPct" radius={[4,4,0,0]} cursor="pointer"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onClick={(entry:any)=>{ if(entry?.label && Array.isArray(entry?.tasks)) setSelected(entry as MonthData) }}>
                 {data.map((d,i)=><Cell key={i} fill={COL.ak}
-                  fillOpacity={hoveredLabel===null?0.85:hoveredLabel===d.label?1:0.35}/>)}
+                  fillOpacity={hoveredLabel===null?0.85:hoveredLabel===d.label?1:0.3}/>)}
               </Bar>
-              <Bar yAxisId="right" dataKey="taPct" radius={[4,4,0,0]}>
+              <Bar yAxisId="right" dataKey="taPct" radius={[4,4,0,0]} cursor="pointer"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onClick={(entry:any)=>{ if(entry?.label && Array.isArray(entry?.tasks)) setSelected(entry as MonthData) }}>
                 {data.map((d,i)=><Cell key={i} fill={COL.ta}
-                  fillOpacity={hoveredLabel===null?0.85:hoveredLabel===d.label?1:0.35}/>)}
+                  fillOpacity={hoveredLabel===null?0.85:hoveredLabel===d.label?1:0.3}/>)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
