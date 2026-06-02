@@ -9,6 +9,7 @@ import { FunnelChart } from "@/components/FunnelChart"
 import { TimelineChart } from "@/components/TimelineChart"
 import { QueueBreakdown } from "@/components/QueueBreakdown"
 import { TypeFilter } from "@/components/TypeFilter"
+import { MonthlyChart } from "@/components/MonthlyChart"
 import { TaskTable } from "@/components/TaskTable"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
@@ -325,9 +326,17 @@ export default function App() {
               </div>
             )}
 
-            {/* Timeline */}
-            {loading ? <Skeleton className="h-72 rounded-xl" /> : data && (
-              <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} />
+            {/* Timeline + Monthly */}
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-64 rounded-xl" />
+                <Skeleton className="h-64 rounded-xl" />
+              </div>
+            ) : data && (
+              <div className="space-y-4">
+                <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} />
+                <MonthlyChart tasks={view} />
+              </div>
             )}
 
             {/* Breakdown + Table */}
