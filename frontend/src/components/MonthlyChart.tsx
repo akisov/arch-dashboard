@@ -21,14 +21,14 @@ function fmtDate(iso: string | null): string {
 }
 
 interface MonthData {
-  key: string; label: string; total: number; ak: number; ta: number
+  label: string; total: number; ak: number; ta: number
   akPct: number; taPct: number; tasks: Task[]
 }
 
 function TaskModal({ month, onClose }: { month: MonthData; onClose: () => void }) {
   const [filter, setFilter] = useState<"all"|"ak"|"ta">("all")
-  const shown = filter === "ak" ? month.tasks.filter(t=>t.v1n>0)
-               : filter === "ta" ? month.tasks.filter(t=>t.v2n>0)
+  const shown = filter==="ak" ? month.tasks.filter(t=>t.v1n>0)
+               : filter==="ta" ? month.tasks.filter(t=>t.v2n>0)
                : month.tasks
 
   const badge = (t: Task) => {
@@ -61,7 +61,7 @@ function TaskModal({ month, onClose }: { month: MonthData; onClose: () => void }
             </a>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground truncate">{t.title}</p>
-              <p className="text-xs text-muted-foreground">{t.entryDate ? fmtDate(t.entryDate) : "—"}</p>
+              <p className="text-xs text-muted-foreground">{fmtDate(t.entryDate)}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {badge(t)}
@@ -79,81 +79,97 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
   const { theme } = useTheme()
   const isDark = theme==="dark"||(theme==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches)
   const [selected, setSelected] = useState<MonthData|null>(null)
-  const [hoveredBar, setHoveredBar] = useState<string|null>(null)
+  const [hoveredIdx, setHoveredIdx] = useState<number|null>(null)
 
-  const monthMap: Record<string,MonthData> = {}
+  // Group by month
+  const monthMap: Record<string, MonthData> = {}
   for (const t of tasks) {
     if (!t.entryDate) continue
-    const d = new Date(t.entryDate+"T00:00:00")
+    const d = new Date(t.entryDate + "T00:00:00")
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`
     const label = `${MONTH_NAMES[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`
-    if (!monthMap[key]) monthMap[key]={key,label,total:0,ak:0,ta:0,akPct:0,taPct:0,tasks:[]}
-    monthMap[key].total++; monthMap[key].tasks.push(t)
+    if (!monthMap[key]) monthMap[key] = { label, total:0, ak:0, ta:0, akPct:0, taPct:0, tasks:[] }
+    monthMap[key].total++
+    monthMap[key].tasks.push(t)
     if (t.v1n>0) monthMap[key].ak++
     if (t.v2n>0) monthMap[key].ta++
   }
-  const data: MonthData[] = Object.keys(monthMap).sort().map(k=>{
-    const m=monthMap[k]
-    return{...m,akPct:m.total>0?Math.round(m.ak/m.total*100):0,taPct:m.total>0?Math.round(m.ta/m.total*100):0}
+  const data: MonthData[] = Object.keys(monthMap).sort().map(k => {
+    const m = monthMap[k]
+    return { ...m, akPct: m.total>0?Math.round(m.ak/m.total*100):0, taPct: m.total>0?Math.round(m.ta/m.total*100):0 }
   })
 
-  if (data.length===0) return null
+  if (data.length === 0) return null
 
-  const tooltipBg     = isDark?"hsl(224,71%,6%)":"#ffffff"
-  const tooltipBorder = isDark?"hsl(216,34%,17%)":"hsl(220,13%,88%)"
-  const tooltipText   = isDark?"hsl(213,31%,91%)":"hsl(224,71%,10%)"
-  const gridColor     = isDark?"hsl(216,34%,17%)":"hsl(220,13%,91%)"
-  const axisColor     = isDark?"hsl(215,16%,47%)":"hsl(220,9%,55%)"
+  const tooltipBg     = isDark ? "hsl(224,71%,6%)"  : "#ffffff"
+  const tooltipBorder = isDark ? "hsl(216,34%,17%)" : "hsl(220,13%,88%)"
+  const tooltipText   = isDark ? "hsl(213,31%,91%)" : "hsl(224,71%,10%)"
+  const gridColor     = isDark ? "hsl(216,34%,17%)" : "hsl(220,13%,91%)"
+  const axisColor     = isDark ? "hsl(215,16%,47%)" : "hsl(220,9%,55%)"
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip=({active,payload,label}:any)=>{
-    if(!active||!payload?.length) return null
-    const d:MonthData=payload[0]?.payload
-    return(
-      <div style={{background:tooltipBg,border:`1px solid ${tooltipBorder}`,borderRadius:12,padding:"12px 16px",fontSize:12,minWidth:190,boxShadow:"0 8px 24px rgba(0,0,0,0.15)"}}>
-        <p style={{color:tooltipText,fontWeight:700,marginBottom:8}}>{label}</p>
-        <p style={{color:"hsl(252,87%,70%)",marginBottom:3}}>📋 Пришло: <b>{d.total}</b></p>
-        <p style={{color:"hsl(166,76%,40%)",marginBottom:3}}>🔄 АрхКом: <b>{d.ak}</b> <span style={{opacity:.7}}>({d.akPct}%)</span></p>
-        <p style={{color:"hsl(350,89%,60%)",marginBottom:8}}>↩️ ТА: <b>{d.ta}</b> <span style={{opacity:.7}}>({d.taPct}%)</span></p>
-        <p style={{color:axisColor,fontSize:10,borderTop:`1px solid ${tooltipBorder}`,paddingTop:6}}>👆 Нажмите на столбец</p>
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null
+    const d: MonthData = payload[0]?.payload
+    return (
+      <div style={{ background:tooltipBg, border:`1px solid ${tooltipBorder}`, borderRadius:12, padding:"12px 16px", fontSize:12, minWidth:200, boxShadow:"0 8px 24px rgba(0,0,0,0.15)" }}>
+        <p style={{ color:tooltipText, fontWeight:700, marginBottom:8 }}>{label}</p>
+        <p style={{ color:"hsl(252,87%,70%)", marginBottom:3 }}>📋 Пришло: <b>{d.total}</b></p>
+        <p style={{ color:"hsl(166,76%,40%)", marginBottom:3 }}>🔄 АрхКом: <b>{d.ak}</b> ({d.akPct}%)</p>
+        <p style={{ color:"hsl(350,89%,60%)", marginBottom:8 }}>↩️ ТА: <b>{d.ta}</b> ({d.taPct}%)</p>
+        <p style={{ color:axisColor, fontSize:10, borderTop:`1px solid ${tooltipBorder}`, paddingTop:6 }}>👆 Нажмите для детализации</p>
       </div>
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleBarClick=(entry:any)=>{ if(entry?.payload) setSelected(entry.payload) }
-
-  return(
+  return (
     <>
       <Card>
         <CardContent className="p-6">
           <p className="text-sm font-bold text-foreground mb-1">По месяцам — % возвратов</p>
-          <p className="text-xs text-muted-foreground mb-5">Нажмите на столбец для детализации задач</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={data} margin={{top:8,right:16,left:-20,bottom:0}} barCategoryGap="30%">
+          <p className="text-xs text-muted-foreground mb-5">
+            Нажмите на любой столбец чтобы увидеть задачи месяца
+          </p>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={data} margin={{ top:8, right:16, left:-20, bottom:0 }} barCategoryGap="25%" barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false}/>
-              <XAxis dataKey="label" tick={{fill:axisColor,fontSize:11}} axisLine={false} tickLine={false}/>
-              <YAxis tick={{fill:axisColor,fontSize:11}} axisLine={false} tickLine={false}
+              <XAxis dataKey="label" tick={{ fill:axisColor, fontSize:11 }} axisLine={false} tickLine={false}/>
+              <YAxis yAxisId="left" tick={{ fill:axisColor, fontSize:11 }} axisLine={false} tickLine={false} allowDecimals={false}/>
+              <YAxis yAxisId="right" orientation="right" tick={{ fill:axisColor, fontSize:11 }} axisLine={false} tickLine={false}
                 tickFormatter={v=>`${v}%`} domain={[0,100]}/>
-              <Tooltip content={<CustomTooltip/>}
-                cursor={{fill:isDark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)",radius:6}}/>
-              <Legend iconType="circle" iconSize={8} wrapperStyle={{fontSize:12,paddingTop:12,color:axisColor}}/>
+              <Tooltip content={<CustomTooltip/>} cursor={{ fill: isDark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.03)", radius:4 }}/>
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12, paddingTop:12, color:axisColor }}/>
 
-              <Bar dataKey="akPct" name="АрхКом %" radius={[4,4,0,0]}
-                onClick={handleBarClick} cursor="pointer"
-                onMouseEnter={(_,i)=>setHoveredBar(`ak-${i}`)} onMouseLeave={()=>setHoveredBar(null)}>
-                {data.map((_,i)=>(
-                  <Cell key={i} fill="hsl(166,76%,40%)"
-                    fillOpacity={hoveredBar===`ak-${i}`?1:hoveredBar&&hoveredBar!==`ak-${i}`?0.5:0.8}/>
+              {/* Общее кол-во — левая ось */}
+              <Bar yAxisId="left" dataKey="total" name="Пришло" radius={[4,4,0,0]} cursor="pointer"
+                onClick={(_,i) => setSelected(data[i])}
+                onMouseEnter={(_,i) => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}>
+                {data.map((_,i) => (
+                  <Cell key={i} fill="hsl(252,87%,70%)"
+                    fillOpacity={hoveredIdx===i ? 0.9 : hoveredIdx!==null ? 0.3 : 0.5}/>
                 ))}
               </Bar>
 
-              <Bar dataKey="taPct" name="ТА %" radius={[4,4,0,0]}
-                onClick={handleBarClick} cursor="pointer"
-                onMouseEnter={(_,i)=>setHoveredBar(`ta-${i}`)} onMouseLeave={()=>setHoveredBar(null)}>
-                {data.map((_,i)=>(
+              {/* АрхКом % — правая ось */}
+              <Bar yAxisId="right" dataKey="akPct" name="АрхКом %" radius={[4,4,0,0]} cursor="pointer"
+                onClick={(_,i) => setSelected(data[i])}
+                onMouseEnter={(_,i) => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}>
+                {data.map((_,i) => (
+                  <Cell key={i} fill="hsl(166,76%,40%)"
+                    fillOpacity={hoveredIdx===i ? 1 : hoveredIdx!==null ? 0.4 : 0.8}/>
+                ))}
+              </Bar>
+
+              {/* ТА % — правая ось */}
+              <Bar yAxisId="right" dataKey="taPct" name="ТА %" radius={[4,4,0,0]} cursor="pointer"
+                onClick={(_,i) => setSelected(data[i])}
+                onMouseEnter={(_,i) => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}>
+                {data.map((_,i) => (
                   <Cell key={i} fill="hsl(350,89%,60%)"
-                    fillOpacity={hoveredBar===`ta-${i}`?1:hoveredBar&&hoveredBar!==`ta-${i}`?0.5:0.8}/>
+                    fillOpacity={hoveredIdx===i ? 1 : hoveredIdx!==null ? 0.4 : 0.8}/>
                 ))}
               </Bar>
             </BarChart>
@@ -161,7 +177,7 @@ export function MonthlyChart({ tasks }: MonthlyChartProps) {
         </CardContent>
       </Card>
 
-      {selected&&<TaskModal month={selected} onClose={()=>setSelected(null)}/>}
+      {selected && <TaskModal month={selected} onClose={() => setSelected(null)}/>}
     </>
   )
 }
