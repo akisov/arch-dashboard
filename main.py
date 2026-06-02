@@ -90,10 +90,14 @@ async def tracker_request(client: httpx.AsyncClient, method: str, path: str, bod
                 await asyncio.sleep(2 ** attempt)
                 continue
         if r.status_code == 429:
-            await asyncio.sleep(2 ** (attempt + 1))
+            wait = 5 * (2 ** attempt)  # 5, 10, 20, 40, 80 сек
+            print(f"  [429] rate limit, ждём {wait}s...")
+            await asyncio.sleep(wait)
             continue
         if r.status_code >= 500:
-            await asyncio.sleep(2 ** attempt)
+            wait = 3 * (2 ** attempt)
+            print(f"  [5xx] {r.status_code}, ждём {wait}s...")
+            await asyncio.sleep(wait)
             continue
         r.raise_for_status()
         return r.json()
@@ -112,7 +116,8 @@ async def fetch_changelog(client, key):
         try:
             data = await tracker_request(client, "GET",
                 f"/v2/issues/{key}/changelog?perPage=100&page={page}&type=IssueWorkflow")
-        except Exception:
+        except Exception as e:
+            print(f"  [WARN] changelog {key} page {page} failed: {e}")
             break
         if not isinstance(data, list) or not data:
             break
@@ -120,12 +125,14 @@ async def fetch_changelog(client, key):
         if len(data) < 100:
             break
         page += 1
+        await asyncio.sleep(0.2)   # пауза между страницами changelog
     return all_entries
 
 # ── Sync logic ────────────────────────────────────────────────────────────────
 
 async def sync_queue(client, queue, updated_from, send):
     await send({"type": "progress", "msg": f"{queue}: загружаем список задач…", "pct": 5})
+    print(f"[{queue}] fetching issues updated since {updated_from}...")
 
     page1 = await fetch_issues_page(client, queue, updated_from, 1)
     issues = list(page1)
@@ -134,23 +141,33 @@ async def sync_queue(client, queue, updated_from, send):
         while True:
             data = await fetch_issues_page(client, queue, updated_from, page)
             issues.extend(data)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.5)   # пауза между страницами задач
             if len(data) < 100:
                 break
             page += 1
 
+    print(f"[{queue}] total issues: {len(issues)}")
     await send({"type": "progress", "msg": f"{queue}: {len(issues)} задач, загружаем историю…", "pct": 15})
 
-    BATCH = 5
+    # Батч 3 — меньше параллельных запросов, меньше 429
+    BATCH = 3
+    failed = 0
     for i in range(0, len(issues), BATCH):
         chunk = issues[i:i + BATCH]
-        changelogs = await asyncio.gather(*[fetch_changelog(client, iss["key"]) for iss in chunk])
-        await asyncio.sleep(0.5)
+        changelogs = await asyncio.gather(
+            *[fetch_changelog(client, iss["key"]) for iss in chunk],
+            return_exceptions=True
+        )
+        # пауза между батчами — 1 сек чтобы не словить 429
+        await asyncio.sleep(1.0)
 
-        # Build batch statements
         stmts = []
         for iss, cl in zip(chunk, changelogs):
             key = iss["key"]
+            if isinstance(cl, Exception):
+                failed += 1
+                print(f"  [FAIL] {key}: {cl}")
+                continue
             stmts.append(stmt(
                 "INSERT INTO tasks(key,title,queue,created_at) VALUES(?,?,?,?) "
                 "ON CONFLICT(key) DO UPDATE SET title=excluded.title",
@@ -171,6 +188,14 @@ async def sync_queue(client, queue, updated_from, send):
 
         if stmts:
             await turso_execute(stmts)
+
+        done = i + len(chunk)
+        pct = 15 + round(done / len(issues) * 70)
+        msg = f"{queue}: {done}/{len(issues)}"
+        if failed:
+            msg += f" ({failed} ошибок)"
+        print(f"  {msg}")
+        await send({"type": "progress", "msg": msg, "pct": pct})
 
         pct = 15 + round((i + len(chunk)) / len(issues) * 70)
         await send({"type": "progress", "msg": f"{queue}: {i+len(chunk)}/{len(issues)}", "pct": pct})
