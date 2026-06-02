@@ -35,8 +35,34 @@ function initDates() {
   return { from: fmt(start), to: fmt(end) }
 }
 
+// Пресеты периодов
+const PRESETS = [
+  {
+    label: "7 дней",
+    getDates: () => { const e = new Date(), s = new Date(); s.setDate(s.getDate() - 7); return { from: fmt(s), to: fmt(e) } }
+  },
+  {
+    label: "Месяц",
+    getDates: () => { const e = new Date(), s = new Date(); s.setDate(s.getDate() - 30); return { from: fmt(s), to: fmt(e) } }
+  },
+  {
+    label: "Пр. месяц",
+    getDates: () => {
+      const now = new Date()
+      const s = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      const e = new Date(now.getFullYear(), now.getMonth(), 0)
+      return { from: fmt(s), to: fmt(e) }
+    }
+  },
+  {
+    label: "Квартал",
+    getDates: () => { const e = new Date(), s = new Date(); s.setDate(s.getDate() - 90); return { from: fmt(s), to: fmt(e) } }
+  },
+]
+
 export default function App() {
   const [dates, setDates] = useState(initDates)
+  const [activePreset, setActivePreset] = useState("Месяц")
   const [queue, setQueue] = useState<Queue>("ALL")
   const [filter, setFilter] = useState("all")
 
@@ -95,6 +121,14 @@ export default function App() {
 
   useEffect(() => { load() }, [])
 
+  // Авто-обновление данных из БД каждые 30 минут (тихо, без спиннера)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!syncing) load(dates.from, dates.to)
+    }, 30 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [dates, syncing, load])
+
   // Derive view based on selected queue
   const view = !data ? [] : queue === "ALL" ? data.tasks : (data.queues[queue]?.tasks ?? [])
   const total = view.length
@@ -138,15 +172,31 @@ export default function App() {
             <p className="text-sm text-muted-foreground mt-1">Story-задачи · POOLING · DOSTAVKAPIKO · UDOSTAVKA</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Пресеты */}
+            <div className="flex gap-1 bg-card border border-border rounded-lg p-1">
+              {PRESETS.map(p => (
+                <button key={p.label}
+                  onClick={() => { const d = p.getDates(); setDates(d); setActivePreset(p.label); load(d.from, d.to) }}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
+                    activePreset === p.label
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  )}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {/* Date picker */}
             <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 h-10">
               <span className="text-xs text-muted-foreground">с</span>
               <input type="date" value={dates.from}
-                onChange={e => setDates(d => ({ ...d, from: e.target.value }))}
+                onChange={e => { setDates(d => ({ ...d, from: e.target.value })); setActivePreset("") }}
                 className="bg-transparent border-none text-sm text-foreground outline-none w-28 [color-scheme:dark]" />
               <span className="text-muted-foreground">—</span>
               <span className="text-xs text-muted-foreground">по</span>
               <input type="date" value={dates.to}
-                onChange={e => setDates(d => ({ ...d, to: e.target.value }))}
+                onChange={e => { setDates(d => ({ ...d, to: e.target.value })); setActivePreset("") }}
                 className="bg-transparent border-none text-sm text-foreground outline-none w-28 [color-scheme:dark]" />
             </div>
             <Button onClick={() => load(dates.from, dates.to)} disabled={loading || syncing}>
