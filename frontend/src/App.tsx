@@ -8,6 +8,7 @@ import { FlowCard } from "@/components/FlowCard"
 import { FunnelChart } from "@/components/FunnelChart"
 import { TimelineChart } from "@/components/TimelineChart"
 import { QueueBreakdown } from "@/components/QueueBreakdown"
+import { TypeFilter } from "@/components/TypeFilter"
 import { TaskTable } from "@/components/TaskTable"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
@@ -50,7 +51,7 @@ const PRESETS = [
     getDates: () => {
       const now = new Date()
       const s = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-      const e = new Date(now.getFullYear(), now.getMonth(), 0)
+      const e = new Date(now.getFullYear(), now.getMonth(), 0)  // последний день прошлого месяца
       return { from: fmt(s), to: fmt(e) }
     }
   },
@@ -65,6 +66,7 @@ export default function App() {
   const [activePreset, setActivePreset] = useState("Месяц")
   const [queue, setQueue] = useState<Queue>("ALL")
   const [filter, setFilter] = useState("all")
+  const [typeFilter, setTypeFilter] = useState("all")
 
   const [data, setData] = useState<DashboardData | null>(null)
   const [syncInfo, setSyncInfo] = useState<SyncInfo | null>(null)
@@ -129,8 +131,15 @@ export default function App() {
     return () => clearInterval(interval)
   }, [dates, syncing, load])
 
-  // Derive view based on selected queue
-  const view = !data ? [] : queue === "ALL" ? data.tasks : (data.queues[queue]?.tasks ?? [])
+  // Derive view based on selected queue + type filter
+  const viewByQueue = !data ? [] : queue === "ALL" ? data.tasks : (data.queues[queue]?.tasks ?? [])
+  const view = typeFilter === "all" ? viewByQueue : viewByQueue.filter(t => t.issueType === typeFilter)
+
+  // Counts per type for TypeFilter badges
+  const typeCounts = { all: viewByQueue.length } as Record<string, number>
+  for (const t of viewByQueue) {
+    typeCounts[t.issueType] = (typeCounts[t.issueType] ?? 0) + 1
+  }
   const total = view.length
   const v1tasks = view.filter((t) => t.v1n > 0).length
   const v2tasks = view.filter((t) => t.v2n > 0).length
@@ -243,7 +252,7 @@ export default function App() {
                 const tasks = q === "ALL" ? (data?.tasks ?? []) : (data?.queues[q]?.tasks ?? [])
                 const isActive = queue === q
                 return (
-                  <button key={q} onClick={() => setQueue(q)}
+                  <button key={q} onClick={() => { setQueue(q); setTypeFilter("all") }}
                     className={cn(
                       "flex flex-col text-left px-4 py-3 rounded-xl border transition-all duration-200 min-w-[140px]",
                       "hover:-translate-y-0.5 active:scale-[0.98]",
@@ -274,6 +283,11 @@ export default function App() {
                 )
               })}
             </div>
+
+            {/* Type filter */}
+            {data && (
+              <TypeFilter active={typeFilter} counts={typeCounts} onChange={setTypeFilter} />
+            )}
 
             {/* Stat cards */}
             {loading ? (

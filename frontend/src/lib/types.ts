@@ -3,6 +3,8 @@ export interface Task {
   title: string
   url: string
   queue: string
+  issueType: string       // story | analytics | technicaldebt | improvement | elaboration
+  issueTypeDisplay: string // Человекочитаемое название
   entryDate: string | null
   v1n: number
   v2n: number

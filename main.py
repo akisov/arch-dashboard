@@ -60,7 +60,8 @@ def rows_to_dicts(result: dict) -> list[dict]:
 async def init_db():
     await turso_execute([
         stmt("""CREATE TABLE IF NOT EXISTS tasks (
-            key TEXT PRIMARY KEY, title TEXT, queue TEXT, created_at TEXT)"""),
+            key TEXT PRIMARY KEY, title TEXT, queue TEXT, created_at TEXT,
+            issue_type TEXT, issue_type_display TEXT)"""),
         stmt("""CREATE TABLE IF NOT EXISTS transitions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             issue_key TEXT NOT NULL, from_status TEXT, to_status TEXT, ts TEXT NOT NULL)"""),
@@ -70,6 +71,15 @@ async def init_db():
         stmt("""CREATE TABLE IF NOT EXISTS sync_log (
             queue TEXT PRIMARY KEY, last_synced TEXT)"""),
     ])
+    # Миграция: добавляем колонки если их нет (игнорируем ошибку если уже есть)
+    for col_sql in [
+        "ALTER TABLE tasks ADD COLUMN issue_type TEXT",
+        "ALTER TABLE tasks ADD COLUMN issue_type_display TEXT",
+    ]:
+        try:
+            await turso_execute([stmt(col_sql)])
+        except Exception:
+            pass  # колонка уже существует
 
 # ── Tracker API ───────────────────────────────────────────────────────────────
 
@@ -171,10 +181,12 @@ async def sync_queue(client, queue, updated_from, send):
                 failed += 1
                 print(f"  [FAIL] {key}: {cl}")
                 continue
+            itype = iss.get("type", {})
             stmts.append(stmt(
-                "INSERT INTO tasks(key,title,queue,created_at) VALUES(?,?,?,?) "
-                "ON CONFLICT(key) DO UPDATE SET title=excluded.title",
-                [key, iss.get("summary", "—"), queue, iss.get("createdAt", "")]
+                "INSERT INTO tasks(key,title,queue,created_at,issue_type,issue_type_display) VALUES(?,?,?,?,?,?) "
+                "ON CONFLICT(key) DO UPDATE SET title=excluded.title, issue_type=excluded.issue_type, issue_type_display=excluded.issue_type_display",
+                [key, iss.get("summary", "—"), queue, iss.get("createdAt", ""),
+                 itype.get("key", ""), itype.get("display", "")]
             ))
             for e in cl:
                 ts = e.get("updatedAt") or e.get("createdAt") or ""
@@ -216,14 +228,15 @@ async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
 
     results = await turso_execute([
         stmt(f"""
-            SELECT t.issue_key, MIN(t.ts) AS entry_ts, tk.title, tk.queue
+            SELECT t.issue_key, MIN(t.ts) AS entry_ts, tk.title, tk.queue,
+                   tk.issue_type, tk.issue_type_display
             FROM transitions t
             JOIN tasks tk ON tk.key = t.issue_key
             WHERE t.to_status = ?
               AND substr(t.ts,1,10) >= ?
               AND substr(t.ts,1,10) <= ?
               AND tk.queue IN ({q_ph})
-            GROUP BY t.issue_key, tk.title, tk.queue
+            GROUP BY t.issue_key, tk.title, tk.queue, tk.issue_type, tk.issue_type_display
         """, [ENTRY_STATUS, date_from, date_to, *queues]),
     ])
 
@@ -256,6 +269,8 @@ async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
             "title": r["title"] or "—",
             "url": f"https://tracker.yandex.ru/{key}",
             "queue": r["queue"],
+            "issueType": r.get("issue_type") or "story",
+            "issueTypeDisplay": r.get("issue_type_display") or "Story",
             "entryDate": (r["entry_ts"] or "")[:10],
             "v1n": c["v1n"], "v2n": c["v2n"],
             "total": c["v1n"] + c["v2n"],
