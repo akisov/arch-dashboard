@@ -114,7 +114,7 @@ export default function App() {
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-base">🏛</div>
             <div>
               <p className="text-sm font-bold leading-none">Арх. комитет</p>
-              <p className="text-[11px] text-muted-foreground leading-none mt-0.5">Аналитика возвратов</p>
+              <p className="text-[11px] text-muted-foreground leading-none mt-0.5">Story · Аналитика · ТехДолг · Улучшение</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

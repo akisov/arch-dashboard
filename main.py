@@ -103,10 +103,13 @@ async def tracker_request(client: httpx.AsyncClient, method: str, path: str, bod
         return r.json()
     raise Exception(f"Failed after retries: {url}")
 
+# Типы задач которые проходят через арх. комитет
+ISSUE_TYPES = ["story", "analytics", "technicaldebt", "improvement", "elaboration"]
+
 async def fetch_issues_page(client, queue, updated_from, page):
     data = await tracker_request(client, "POST",
         f"/v2/issues/_search?perPage=100&page={page}",
-        {"filter": {"queue": queue, "type": "story",
+        {"filter": {"queue": queue, "type": ISSUE_TYPES,
                     "updatedAt": {"from": f"{updated_from}T00:00:00", "to": "2099-01-01T00:00:00"}}})
     return data if isinstance(data, list) else []
 
