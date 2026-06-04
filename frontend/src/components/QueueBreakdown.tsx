@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card"
 import type { Task } from "@/lib/types"
+import type { TaskModalData } from "@/components/TaskListModal"
 
 interface QueueBreakdownProps {
   tasks: Task[]
-  onQueueClick: (queue: string) => void
+  onShowTasks?: (data: TaskModalData) => void
 }
 
 const QUEUES = ["POOLING", "DOSTAVKAPIKO", "UDOSTAVKA"]
@@ -22,7 +23,7 @@ function plural(n: number, one: string, few: string, many: string) {
   return many
 }
 
-export function QueueBreakdown({ tasks, onQueueClick }: QueueBreakdownProps) {
+export function QueueBreakdown({ tasks, onShowTasks }: QueueBreakdownProps) {
   const total = tasks.length
   const maxCount = Math.max(...QUEUES.map(q => tasks.filter(t => t.queue === q).length), 1)
 
@@ -47,8 +48,9 @@ export function QueueBreakdown({ tasks, onQueueClick }: QueueBreakdownProps) {
             return (
               <button
                 key={q}
-                onClick={() => onQueueClick(q)}
-                className="w-full text-left group hover:bg-secondary/60 rounded-xl px-3 py-3 -mx-3 transition-colors"
+                onClick={() => qCount > 0 && onShowTasks?.({ title: `Очередь ${q}`, subtitle: `${qCount} задач · АрхКом вернул ${qAk} · ТА вернул ${qTa}`, tasks: qTasks })}
+                disabled={qCount === 0}
+                className="w-full text-left group hover:bg-secondary/60 rounded-xl px-3 py-3 -mx-3 transition-colors disabled:cursor-default disabled:hover:bg-transparent"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-xs font-bold uppercase tracking-widest ${c.text}`}>{q}</span>
@@ -76,14 +78,17 @@ export function QueueBreakdown({ tasks, onQueueClick }: QueueBreakdownProps) {
         {/* Pass rate summary */}
         <div className="mt-5 pt-4 border-t border-border grid grid-cols-3 gap-3 text-center">
           {[
-            { label: "С первого раза", value: tasks.filter(t => t.total === 0).length, color: "text-emerald-600 dark:text-emerald-400" },
-            { label: "Вернул АрхКом",  value: tasks.filter(t => t.v1n > 0).length,    color: "text-[hsl(166,76%,36%)]" },
-            { label: "Вернул ТА",      value: tasks.filter(t => t.v2n > 0).length,    color: "text-rose-600 dark:text-rose-400" },
+            { label: "С первого раза", value: tasks.filter(t => t.total === 0), color: "text-emerald-600 dark:text-emerald-400" },
+            { label: "Вернул АрхКом",  value: tasks.filter(t => t.v1n > 0),    color: "text-[hsl(166,76%,36%)]" },
+            { label: "Вернул ТА",      value: tasks.filter(t => t.v2n > 0),    color: "text-rose-600 dark:text-rose-400" },
           ].map(s => (
-            <div key={s.label}>
-              <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+            <button key={s.label}
+              onClick={() => s.value.length > 0 && onShowTasks?.({ title: s.label, tasks: s.value })}
+              disabled={s.value.length === 0}
+              className="rounded-lg py-1 transition-colors hover:bg-secondary/60 disabled:hover:bg-transparent disabled:cursor-default">
+              <p className={`text-2xl font-black ${s.color}`}>{s.value.length}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{s.label}</p>
-            </div>
+            </button>
           ))}
         </div>
       </CardContent>

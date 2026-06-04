@@ -1,16 +1,18 @@
-import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Modal } from "@/components/ui/modal"
-import { Badge } from "@/components/ui/badge"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend
 } from "recharts"
 import type { Task } from "@/lib/types"
+import type { TaskModalData } from "@/components/TaskListModal"
 import { useTheme } from "@/lib/theme"
-import { ExternalLink } from "lucide-react"
 
-interface TimelineChartProps { tasks: Task[]; dateFrom: string; dateTo: string }
+interface TimelineChartProps {
+  tasks: Task[]
+  dateFrom: string
+  dateTo: string
+  onShowTasks?: (data: TaskModalData) => void
+}
 
 function weekStart(iso: string): string {
   const d = new Date(iso + "T00:00:00"), day = d.getDay()
@@ -25,62 +27,9 @@ function fmtDate(iso: string | null): string {
 
 interface WeekData { date: string; total: number; ak: number; ta: number; tasks: Task[] }
 
-function TaskModal({ week, onClose }: { week: WeekData; onClose: () => void }) {
-  const [filter, setFilter] = useState<"all"|"ak"|"ta">("all")
-  const akCount = week.tasks.filter(t=>t.v1n>0).length
-  const taCount = week.tasks.filter(t=>t.v2n>0).length
-  const shown = filter==="ak" ? week.tasks.filter(t=>t.v1n>0)
-               : filter==="ta" ? week.tasks.filter(t=>t.v2n>0)
-               : week.tasks
-
-  const badge = (t: Task) => {
-    if (t.v1n>0&&t.v2n>0) return <Badge variant="default">АрхКом+ТА</Badge>
-    if (t.v1n>0) return <Badge variant="success">АрхКом</Badge>
-    if (t.v2n>0) return <Badge variant="destructive">ТА</Badge>
-    return <Badge variant="secondary">✓ Ок</Badge>
-  }
-
-  return (
-    <Modal open onClose={onClose} wide
-      title={`Неделя с ${week.date} — ${week.total} задач`}
-      subtitle={`АрхКом вернул ${akCount} · ТА вернул ${taCount}`}>
-      <div className="flex gap-2 mb-4">
-        {([["all",`Все (${week.total})`],["ak",`АрхКом (${akCount})`],["ta",`ТА (${taCount})`]] as const).map(([k,l])=>(
-          <button key={k} onClick={()=>setFilter(k)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-              filter===k ? "bg-primary border-primary text-primary-foreground"
-                         : "border-border text-muted-foreground hover:text-foreground bg-transparent"}`}>
-            {l}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-2">
-        {shown.sort((a,b)=>b.total-a.total).map(t=>(
-          <div key={t.key} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border hover:bg-secondary/40 transition-colors">
-            <a href={t.url} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-1 text-primary font-mono text-xs font-bold hover:underline whitespace-nowrap shrink-0">
-              {t.key}<ExternalLink className="w-3 h-3 opacity-40"/>
-            </a>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground truncate">{t.title}</p>
-              <p className="text-xs text-muted-foreground">{fmtDate(t.entryDate)}</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {badge(t)}
-              {t.total>0&&<span className="w-6 h-6 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-black flex items-center justify-center">{t.total}</span>}
-            </div>
-          </div>
-        ))}
-        {shown.length===0&&<p className="text-center text-muted-foreground text-sm py-8">Нет задач</p>}
-      </div>
-    </Modal>
-  )
-}
-
-export function TimelineChart({ tasks, dateFrom, dateTo }: TimelineChartProps) {
+export function TimelineChart({ tasks, dateFrom, dateTo, onShowTasks }: TimelineChartProps) {
   const { theme } = useTheme()
   const isDark = theme==="dark"||(theme==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches)
-  const [selected, setSelected] = useState<WeekData|null>(null)
 
   // Build weeks
   const start = new Date(dateFrom+"T00:00:00"), end = new Date(dateTo+"T00:00:00")
@@ -131,6 +80,11 @@ export function TimelineChart({ tasks, dateFrom, dateTo }: TimelineChartProps) {
   if (!data.length) return null
 
   // activeDot с onClick — открывает модалку для нужной недели
+  const openWeek = (w: WeekData) => onShowTasks?.({
+    title: `Неделя с ${w.date}`,
+    subtitle: `Пришло ${w.total} · АрхКом вернул ${w.ak} · ТА вернул ${w.ta}`,
+    tasks: w.tasks,
+  })
   const makeActiveDot = (color: string) =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ({ cx, cy, payload }: any) => (
@@ -138,13 +92,12 @@ export function TimelineChart({ tasks, dateFrom, dateTo }: TimelineChartProps) {
         style={{ cursor:"pointer" }}
         onClick={() => {
           const w = weekByDate[Object.keys(weekByDate).find(k => weekByDate[k].date === payload.date) ?? ""]
-          if (w) setSelected(w)
+          if (w) openWeek(w)
         }}/>
     )
 
   return (
-    <>
-      <Card>
+    <Card>
         <CardContent className="p-6">
           <p className="text-sm font-bold text-foreground mb-1">Динамика по неделям</p>
           <p className="text-xs text-muted-foreground mb-5">
@@ -185,8 +138,5 @@ export function TimelineChart({ tasks, dateFrom, dateTo }: TimelineChartProps) {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      {selected && <TaskModal week={selected} onClose={()=>setSelected(null)}/>}
-    </>
   )
 }

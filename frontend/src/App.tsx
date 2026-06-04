@@ -12,6 +12,7 @@ import { TypeFilter } from "@/components/TypeFilter"
 import { MonthlyChart } from "@/components/MonthlyChart"
 import { TaskTable } from "@/components/TaskTable"
 import { ArchCommitteeReport } from "@/components/ArchCommitteeReport"
+import { TaskListModal, type TaskModalData } from "@/components/TaskListModal"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
 import { fetchDashboard, fetchSyncInfo, fetchArchCurrent, startSync } from "@/lib/api"
@@ -81,6 +82,7 @@ export default function App() {
   const [syncPct, setSyncPct] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [emptyDb, setEmptyDb] = useState(false)
+  const [taskModal, setTaskModal] = useState<TaskModalData | null>(null)
 
   const loadSyncInfo = useCallback(async () => {
     try {
@@ -361,10 +363,10 @@ export default function App() {
               </div>
             ) : data && (
               <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-                <FunnelChart tasks={view} />
+                <FunnelChart tasks={view} onShowTasks={setTaskModal} />
                 <div className="grid grid-cols-1 gap-4">
-                  <FlowCard type="ak" tasks={view} totalTasks={total} />
-                  <FlowCard type="ta" tasks={view} totalTasks={total} />
+                  <FlowCard type="ak" tasks={view} totalTasks={total} onShowTasks={setTaskModal} />
+                  <FlowCard type="ta" tasks={view} totalTasks={total} onShowTasks={setTaskModal} />
                 </div>
               </div>
             )}
@@ -377,8 +379,8 @@ export default function App() {
               </div>
             ) : data && (
               <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} />
-                <MonthlyChart tasks={view} />
+                <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} onShowTasks={setTaskModal} />
+                <MonthlyChart tasks={view} onShowTasks={setTaskModal} />
               </div>
             )}
 
@@ -390,13 +392,15 @@ export default function App() {
               </div>
             ) : data && (
               <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-                <QueueBreakdown tasks={view} onQueueClick={(q) => setQueue(q as typeof QUEUES[number])} />
+                <QueueBreakdown tasks={view} onShowTasks={setTaskModal} />
                 <TaskTable tasks={view} activeFilter={filter} onFilter={setFilter} />
               </div>
             )}
           </>
         )}
       </main>
+
+      <TaskListModal open={!!taskModal} onClose={() => setTaskModal(null)} data={taskModal} />
     </div>
   )
 }
