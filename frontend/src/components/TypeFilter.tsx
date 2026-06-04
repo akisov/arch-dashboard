@@ -19,8 +19,8 @@ export function TypeFilter({ active, counts, onChange }: TypeFilterProps) {
   const total = counts["all"] ?? 0
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Тип:</span>
+    <div className="flex items-center gap-2 flex-wrap rounded-xl border border-primary/20 bg-card px-4 py-3 shadow-[0_0_24px_rgba(108,99,255,0.08)]">
+      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mr-1 shrink-0">Тип</span>
       <div className="flex gap-1.5 flex-wrap">
         {ISSUE_TYPES.map(t => {
           const count = t.key === "all" ? total : (counts[t.key] ?? 0)
@@ -32,17 +32,17 @@ export function TypeFilter({ active, counts, onChange }: TypeFilterProps) {
               onClick={() => onChange(t.key)}
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold",
-                "border transition-all duration-150",
+                "border transition-all duration-150 hover:-translate-y-0.5",
                 isActive
-                  ? "bg-primary border-primary text-primary-foreground shadow-[0_2px_8px_rgba(108,99,255,0.3)]"
-                  : "border-border bg-card hover:border-primary/40 hover:shadow-sm text-foreground"
+                  ? "bg-primary border-primary text-primary-foreground shadow-[0_2px_8px_rgba(108,99,255,0.4)]"
+                  : "border-border bg-secondary/60 hover:border-primary/50 hover:shadow-[0_2px_12px_rgba(108,99,255,0.15)] text-foreground"
               )}
             >
               <span>{t.icon}</span>
               <span>{t.label}</span>
               <span className={cn(
                 "ml-0.5 text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full",
-                isActive ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"
+                isActive ? "bg-white/20 text-white" : "bg-card text-muted-foreground"
               )}>
                 {count}
               </span>

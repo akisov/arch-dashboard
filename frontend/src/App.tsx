@@ -182,17 +182,19 @@ export default function App() {
         </div>
 
         {/* Period controls — own row */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap rounded-xl border border-primary/20 bg-card px-4 py-3 shadow-[0_0_24px_rgba(108,99,255,0.08)]">
+          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mr-1">Период</span>
+
           {/* Presets */}
-          <div className="flex gap-1 bg-card border border-border rounded-lg p-1">
+          <div className="flex gap-1 bg-secondary/60 rounded-lg p-1">
             {PRESETS.map(p => (
               <button key={p.label}
                 onClick={() => { const d = p.getDates(); setDates(d); setActivePreset(p.label); load(d.from, d.to) }}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap",
                   activePreset === p.label
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    ? "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(108,99,255,0.4)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card"
                 )}>
                 {p.label}
               </button>
@@ -203,7 +205,7 @@ export default function App() {
           <div className="h-6 w-px bg-border" />
 
           {/* Date range */}
-          <div className="flex items-center gap-1.5 bg-card border border-border rounded-lg px-3 h-9">
+          <div className="flex items-center gap-1.5 bg-secondary/60 border border-border rounded-lg px-3 h-9 focus-within:border-primary/50 focus-within:shadow-[0_0_0_2px_rgba(108,99,255,0.15)] transition-all">
             <span className="text-xs text-muted-foreground whitespace-nowrap">с</span>
             <input type="date" value={dates.from}
               onChange={e => { setDates(d => ({ ...d, from: e.target.value })); setActivePreset("") }}
@@ -215,8 +217,8 @@ export default function App() {
               className="bg-transparent border-none text-sm text-foreground outline-none w-[110px] [color-scheme:light] dark:[color-scheme:dark]" />
           </div>
 
-          <Button onClick={() => load(dates.from, dates.to)} disabled={loading || syncing}>
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+          <Button onClick={() => load(dates.from, dates.to)} disabled={loading || syncing} size="sm">
+            {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
             Показать
           </Button>
         </div>
@@ -261,10 +263,10 @@ export default function App() {
                   <button key={q} onClick={() => { setQueue(q); setTypeFilter("all") }}
                     className={cn(
                       "flex flex-col text-left px-4 py-3 rounded-xl border transition-all duration-200 min-w-[140px]",
-                      "hover:-translate-y-0.5 active:scale-[0.98]",
+                      "hover:-translate-y-[3px] hover:scale-[1.01] active:scale-[0.98]",
                       isActive
-                        ? "border-primary bg-card shadow-[0_4px_20px_rgba(108,99,255,0.3)]"
-                        : "border-border bg-card hover:border-primary/50 hover:shadow-[0_4px_16px_rgba(108,99,255,0.12)]"
+                        ? "border-primary bg-card shadow-[0_4px_24px_rgba(108,99,255,0.35),0_0_0_1px_rgba(108,99,255,0.3)]"
+                        : "border-border bg-card hover:border-primary/60 hover:shadow-[0_6px_28px_rgba(108,99,255,0.25),0_0_0_1px_rgba(108,99,255,0.15)]"
                     )}>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
                       {q === "ALL" ? "Все очереди" : q}
@@ -302,11 +304,11 @@ export default function App() {
               </div>
             ) : data && (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <StatCard label="Пришло в АрхКом" value={total} sub="задач за период"           icon="📋" color="purple" />
-                <StatCard label="АрхКом"        value={v1tasks} sub="задач на ревью аналитики"  icon="✅" color="teal" />
-                <StatCard label="ТА"            value={v2tasks} sub="задач вернули на уточнение" icon="🔴" color="rose" />
-                <StatCard label="Оба типа"      value={both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" />
-                <StatCard label="Всего возвратов" value={cuts}  sub="суммарно переходов"         icon="🔁" color="sky" />
+                <div className="animate-fade-in-up stagger-1"><StatCard label="Пришло в АрхКом" value={total} sub="задач за период"           icon="📋" color="purple" /></div>
+                <div className="animate-fade-in-up stagger-2"><StatCard label="АрхКом"        value={v1tasks} sub="задач на ревью аналитики"  icon="✅" color="teal" /></div>
+                <div className="animate-fade-in-up stagger-3"><StatCard label="ТА"            value={v2tasks} sub="задач вернули на уточнение" icon="🔴" color="rose" /></div>
+                <div className="animate-fade-in-up stagger-4"><StatCard label="Оба типа"      value={both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" /></div>
+                <div className="animate-fade-in-up stagger-5"><StatCard label="Всего возвратов" value={cuts}  sub="суммарно переходов"         icon="🔁" color="sky" /></div>
               </div>
             )}
 
@@ -317,7 +319,7 @@ export default function App() {
                 <Skeleton className="h-64 rounded-xl" />
               </div>
             ) : data && (
-              <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
+              <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
                 <FunnelChart tasks={view} />
                 <div className="grid grid-cols-1 gap-4">
                   <FlowCard type="ak" tasks={view} totalTasks={total} />
@@ -333,7 +335,7 @@ export default function App() {
                 <Skeleton className="h-64 rounded-xl" />
               </div>
             ) : data && (
-              <div className="space-y-4">
+              <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
                 <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} />
                 <MonthlyChart tasks={view} />
               </div>
@@ -346,7 +348,7 @@ export default function App() {
                 <Skeleton className="h-72 rounded-xl" />
               </div>
             ) : data && (
-              <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4">
+              <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
                 <QueueBreakdown tasks={view} onQueueClick={(q) => setQueue(q as typeof QUEUES[number])} />
                 <TaskTable tasks={view} activeFilter={filter} onFilter={setFilter} />
               </div>
