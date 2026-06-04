@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { RefreshCw, RotateCcw } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -11,10 +11,11 @@ import { QueueBreakdown } from "@/components/QueueBreakdown"
 import { TypeFilter } from "@/components/TypeFilter"
 import { MonthlyChart } from "@/components/MonthlyChart"
 import { TaskTable } from "@/components/TaskTable"
+import { ArchCommitteeReport } from "@/components/ArchCommitteeReport"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
-import { fetchDashboard, fetchSyncInfo, startSync } from "@/lib/api"
-import type { DashboardData, SyncInfo } from "@/lib/types"
+import { fetchDashboard, fetchSyncInfo, fetchArchCurrent, startSync } from "@/lib/api"
+import type { DashboardData, SyncInfo, ArchTask } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const QUEUES = ["ALL", "POOLING", "DOSTAVKAPIKO", "UDOSTAVKA"] as const
@@ -70,6 +71,8 @@ export default function App() {
   const [typeFilter, setTypeFilter] = useState("all")
 
   const [data, setData] = useState<DashboardData | null>(null)
+  const [archTasks, setArchTasks] = useState<ArchTask[]>([])
+  const [archLoading, setArchLoading] = useState(false)
   const [syncInfo, setSyncInfo] = useState<SyncInfo | null>(null)
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
@@ -87,6 +90,14 @@ export default function App() {
     } catch { return null }
   }, [])
 
+  const loadArch = useCallback(async () => {
+    setArchLoading(true)
+    try {
+      setArchTasks(await fetchArchCurrent())
+    } catch { /* отчёт не критичен */ }
+    finally { setArchLoading(false) }
+  }, [])
+
   const load = useCallback(async (df = dates.from, dt = dates.to) => {
     setError(null)
     setEmptyDb(false)
@@ -97,19 +108,20 @@ export default function App() {
     try {
       const d = await fetchDashboard(df, dt)
       setData(d)
+      loadArch()
     } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [dates, loadSyncInfo])
+  }, [dates, loadSyncInfo, loadArch])
 
-  const doSync = useCallback((full: boolean) => {
+  const doSync = useCallback(() => {
     setSyncing(true)
     setSyncPct(2)
-    setSyncTitle(full ? "Полная синхронизация…" : "Инкрементальный синк…")
+    setSyncTitle("Синхронизация с Трекером…")
     setSyncMsg("Подключаемся к Трекеру…")
-    const es = startSync(full, (msg: { type: string; msg?: string; pct?: number }) => {
+    const es = startSync(false, (msg: { type: string; msg?: string; pct?: number }) => {
       if (msg.type === "progress") { setSyncTitle(msg.msg ?? ""); setSyncPct(msg.pct ?? 0) }
       else if (msg.type === "done") {
         es.close(); setSyncing(false)
@@ -121,6 +133,11 @@ export default function App() {
     })
     es.onerror = () => { es.close(); setSyncing(false); setError("Ошибка соединения при синхронизации") }
   }, [load, loadSyncInfo])
+
+  // Дата последнего синка — минимальная из всех очередей
+  const lastSync = syncInfo
+    ? Object.values(syncInfo).filter(Boolean).sort()[0] ?? null
+    : null
 
   useEffect(() => { load() }, [])
 
@@ -149,6 +166,11 @@ export default function App() {
   const v1cuts = view.reduce((s, t) => s + t.v1n, 0)
   const v2cuts = view.reduce((s, t) => s + t.v2n, 0)
 
+  // Отчёт «сейчас в Арх. комитете» — учитываем фильтры очереди и типа
+  const archView = archTasks
+    .filter(t => queue === "ALL" || t.queue === queue)
+    .filter(t => typeFilter === "all" || t.issueType === typeFilter)
+
   return (
     <div className="min-h-screen bg-background">
       {/* Topnav */}
@@ -161,14 +183,24 @@ export default function App() {
               <p className="text-[11px] text-muted-foreground leading-none mt-0.5">Story · Аналитика · ТехДолг · Улучшение</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => doSync(false)} disabled={syncing}>
-              <RefreshCw className="w-3.5 h-3.5" /> Синк
-            </Button>
-            <Button variant="ghost" size="sm" disabled={syncing}
-              onClick={() => { if (confirm("Полный синк перезагрузит всю историю (5–15 мин). Продолжить?")) doSync(true) }}>
-              <RotateCcw className="w-3.5 h-3.5" /> Полный
-            </Button>
+          <div className="flex items-center gap-3">
+            {/* Кнопка синка с датой последнего синка */}
+            <button
+              onClick={doSync}
+              disabled={syncing}
+              className={cn(
+                "flex items-center gap-2 px-3 h-9 rounded-lg border text-xs font-semibold transition-all",
+                syncing
+                  ? "border-primary/40 bg-primary/10 text-primary cursor-not-allowed"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground hover:shadow-[0_2px_12px_rgba(108,99,255,0.2)]"
+              )}
+            >
+              <RefreshCw className={cn("w-3.5 h-3.5", syncing && "animate-spin")} />
+              <span>{syncing ? "Синкуем…" : "Синк"}</span>
+              {lastSync && !syncing && (
+                <span className="text-muted-foreground/60 font-normal">· {lastSync}</span>
+              )}
+            </button>
             <ThemeToggle />
           </div>
         </div>
@@ -242,12 +274,12 @@ export default function App() {
             <div className="text-5xl mb-5">🗄️</div>
             <h2 className="text-2xl font-black tracking-tight mb-3">База данных пустая</h2>
             <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-              Данные из Яндекс Трекера ещё не загружены. Запустите полный синк — он загрузит историю переходов за 2 года и сохранит в базу. Следующие обновления займут секунды.
+              Данные из Яндекс Трекера ещё не загружены. Запустите синк — первый раз он загрузит историю переходов за 2 года и сохранит в базу. Следующие синки догружают только изменения с даты последнего синка и занимают секунды.
             </p>
-            <Button size="lg" onClick={() => doSync(true)} className="text-base h-12 px-8">
-              <RotateCcw className="w-4 h-4" /> Запустить полный синк
+            <Button size="lg" onClick={doSync} className="text-base h-12 px-8">
+              <RefreshCw className="w-4 h-4" /> Запустить синк
             </Button>
-            <p className="text-xs text-muted-foreground mt-4">Займёт 5–15 минут · Один раз</p>
+            <p className="text-xs text-muted-foreground mt-4">Первый запуск займёт 5–15 минут</p>
           </div>
         )}
 
@@ -309,6 +341,15 @@ export default function App() {
                 <div className="animate-fade-in-up stagger-3"><StatCard label="ТА"            value={v2tasks} sub="задач вернули на уточнение" icon="🔴" color="rose" /></div>
                 <div className="animate-fade-in-up stagger-4"><StatCard label="Оба типа"      value={both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" /></div>
                 <div className="animate-fade-in-up stagger-5"><StatCard label="Всего возвратов" value={cuts}  sub="суммарно переходов"         icon="🔁" color="sky" /></div>
+              </div>
+            )}
+
+            {/* Отчёт: что сейчас в Арх. комитете */}
+            {loading ? (
+              <Skeleton className="h-64 rounded-xl" />
+            ) : data && (
+              <div className="animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+                <ArchCommitteeReport tasks={archView} loading={archLoading} />
               </div>
             )}
 

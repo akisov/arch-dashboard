@@ -1,4 +1,4 @@
-import type { DashboardData, SyncInfo } from "./types"
+import type { DashboardData, SyncInfo, ArchTask } from "./types"
 
 export async function fetchDashboard(dateFrom: string, dateTo: string): Promise<DashboardData> {
   const r = await fetch(`/data?date_from=${dateFrom}&date_to=${dateTo}`)
@@ -10,6 +10,13 @@ export async function fetchDashboard(dateFrom: string, dateTo: string): Promise<
 
 export async function fetchSyncInfo(): Promise<SyncInfo> {
   const r = await fetch("/sync-info")
+  if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return r.json()
+}
+
+export async function fetchArchCurrent(queues?: string): Promise<ArchTask[]> {
+  const q = queues ? `?queues=${queues}` : ""
+  const r = await fetch(`/arch-current${q}`)
   if (!r.ok) throw new Error(`HTTP ${r.status}`)
   return r.json()
 }

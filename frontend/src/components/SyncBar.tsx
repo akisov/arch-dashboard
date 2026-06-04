@@ -31,7 +31,7 @@ export function SyncBar({ info, loading }: SyncBarProps) {
       {!hasAny ? (
         <span className="text-xs text-destructive font-semibold flex items-center gap-1.5">
           <Circle className="w-2 h-2 fill-destructive text-destructive" />
-          Данных нет — запустите Полный синк
+          Данных нет — запустите Синк
         </span>
       ) : (
         queues.map(q => {

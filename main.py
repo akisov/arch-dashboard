@@ -18,6 +18,14 @@ ENTRY_STATUS = "180"   # analiticeskaaProrabotkaGotovo — задача приш
 V1_FROM, V1_TO = "180", "151"   # АрхКом: аналит.проработка готово → ревью аналитики
 V2_FROM, V2_TO = "145", "175"   # ТА: согласование архитектуры → доработка (modification)
 
+# Статусы, в которых задача считается «сейчас в Арх. комитете»
+ARCH_STATUSES = {
+    "180": "Аналитическая проработка готово",
+    "151": "Ревью аналитики",
+    "145": "Согласование архитектуры",
+    "175": "Доработка",
+}
+
 # ── Turso HTTP client ─────────────────────────────────────────────────────────
 
 async def turso_execute(statements: list[dict]) -> list:
@@ -61,7 +69,8 @@ async def init_db():
     await turso_execute([
         stmt("""CREATE TABLE IF NOT EXISTS tasks (
             key TEXT PRIMARY KEY, title TEXT, queue TEXT, created_at TEXT,
-            issue_type TEXT, issue_type_display TEXT)"""),
+            issue_type TEXT, issue_type_display TEXT,
+            status_key TEXT, status_display TEXT, assignee TEXT, status_start TEXT)"""),
         stmt("""CREATE TABLE IF NOT EXISTS transitions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             issue_key TEXT NOT NULL, from_status TEXT, to_status TEXT, ts TEXT NOT NULL)"""),
@@ -75,6 +84,10 @@ async def init_db():
     for col_sql in [
         "ALTER TABLE tasks ADD COLUMN issue_type TEXT",
         "ALTER TABLE tasks ADD COLUMN issue_type_display TEXT",
+        "ALTER TABLE tasks ADD COLUMN status_key TEXT",
+        "ALTER TABLE tasks ADD COLUMN status_display TEXT",
+        "ALTER TABLE tasks ADD COLUMN assignee TEXT",
+        "ALTER TABLE tasks ADD COLUMN status_start TEXT",
     ]:
         try:
             await turso_execute([stmt(col_sql)])
@@ -182,11 +195,25 @@ async def sync_queue(client, queue, updated_from, send):
                 print(f"  [FAIL] {key}: {cl}")
                 continue
             itype = iss.get("type", {})
+            status = iss.get("status", {}) or {}
+            assignee = (iss.get("assignee") or {}).get("display", "")
+            # Дата входа в текущий статус = ts последнего перехода статуса в changelog
+            status_change_ts = [
+                (e.get("updatedAt") or e.get("createdAt") or "")
+                for e in cl
+                for f in e.get("fields", [])
+                if f.get("field", {}).get("id") == "status"
+            ]
+            status_start = max(status_change_ts) if status_change_ts else iss.get("createdAt", "")
             stmts.append(stmt(
-                "INSERT INTO tasks(key,title,queue,created_at,issue_type,issue_type_display) VALUES(?,?,?,?,?,?) "
-                "ON CONFLICT(key) DO UPDATE SET title=excluded.title, issue_type=excluded.issue_type, issue_type_display=excluded.issue_type_display",
+                "INSERT INTO tasks(key,title,queue,created_at,issue_type,issue_type_display,status_key,status_display,assignee,status_start) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(key) DO UPDATE SET title=excluded.title, issue_type=excluded.issue_type, "
+                "issue_type_display=excluded.issue_type_display, status_key=excluded.status_key, "
+                "status_display=excluded.status_display, assignee=excluded.assignee, status_start=excluded.status_start",
                 [key, iss.get("summary", "—"), queue, iss.get("createdAt", ""),
-                 itype.get("key", ""), itype.get("display", "")]
+                 itype.get("key", ""), itype.get("display", ""),
+                 str(status.get("id", "")), status.get("display", ""), assignee, status_start]
             ))
             for e in cl:
                 ts = e.get("updatedAt") or e.get("createdAt") or ""
@@ -285,6 +312,54 @@ async def get_sync_info():
     results = await turso_execute([stmt("SELECT queue, last_synced FROM sync_log")])
     return {r["queue"]: r["last_synced"] for r in rows_to_dicts(results[0])} if results else {}
 
+async def query_arch_current(queues: list[str]):
+    """Задачи, которые сейчас находятся в одном из статусов Арх. комитета.
+    Текущий статус определяем по последнему переходу в истории."""
+    q_ph = ",".join("?" * len(queues))
+    st_ph = ",".join("?" * len(ARCH_STATUSES))
+    results = await turso_execute([stmt(f"""
+        WITH latest AS (
+            SELECT issue_key, to_status, ts,
+                   ROW_NUMBER() OVER (PARTITION BY issue_key ORDER BY ts DESC, id DESC) AS rn
+            FROM transitions
+        )
+        SELECT l.issue_key, l.to_status, l.ts AS latest_ts,
+               tk.title, tk.queue, tk.issue_type, tk.issue_type_display,
+               tk.assignee, tk.status_start, tk.status_display
+        FROM latest l
+        JOIN tasks tk ON tk.key = l.issue_key
+        WHERE l.rn = 1
+          AND l.to_status IN ({st_ph})
+          AND tk.queue IN ({q_ph})
+    """, [*ARCH_STATUSES.keys(), *queues])])
+
+    rows = rows_to_dicts(results[0]) if results else []
+    today = date.today()
+    out = []
+    for r in rows:
+        started = (r.get("status_start") or r.get("latest_ts") or "")[:10]
+        days = 0
+        if started:
+            try:
+                days = max(0, (today - date.fromisoformat(started)).days)
+            except ValueError:
+                days = 0
+        out.append({
+            "key": r["issue_key"],
+            "title": r["title"] or "—",
+            "url": f"https://tracker.yandex.ru/{r['issue_key']}",
+            "queue": r["queue"],
+            "issueType": r.get("issue_type") or "story",
+            "issueTypeDisplay": r.get("issue_type_display") or "Story",
+            "status": ARCH_STATUSES.get(str(r["to_status"])) or r.get("status_display") or "—",
+            "statusKey": str(r["to_status"]),
+            "assignee": r.get("assignee") or "",
+            "since": started,
+            "daysInStatus": days,
+        })
+    out.sort(key=lambda t: t["daysInStatus"], reverse=True)
+    return out
+
 # ── FastAPI ───────────────────────────────────────────────────────────────────
 
 @asynccontextmanager
@@ -341,6 +416,11 @@ async def data(date_from: str = Query(None), date_to: str = Query(None),
         date_to = date.today().isoformat()
     selected = [q for q in queues.split(",") if q in QUEUES] or QUEUES
     return JSONResponse(await query_dashboard(date_from, date_to, selected))
+
+@app.get("/arch-current")
+async def arch_current(queues: str = Query("POOLING,DOSTAVKAPIKO,UDOSTAVKA")):
+    selected = [q for q in queues.split(",") if q in QUEUES] or QUEUES
+    return JSONResponse(await query_arch_current(selected))
 
 # ── Static (React build) ──────────────────────────────────────────────────────
 

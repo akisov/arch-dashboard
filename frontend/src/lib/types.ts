@@ -25,3 +25,17 @@ export interface DashboardData {
 export interface SyncInfo {
   [queue: string]: string
 }
+
+export interface ArchTask {
+  key: string
+  title: string
+  url: string
+  queue: string
+  issueType: string
+  issueTypeDisplay: string
+  status: string
+  statusKey: string
+  assignee: string
+  since: string
+  daysInStatus: number
+}
