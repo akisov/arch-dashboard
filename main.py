@@ -334,26 +334,65 @@ async def query_arch_current(queues: list[str]):
     """, [*ARCH_STATUSES.keys(), *queues])])
 
     rows = rows_to_dicts(results[0]) if results else []
+    if not rows:
+        return []
+
+    # Живое обогащение из Трекера: исполнитель, актуальный статус и дата входа.
+    # Инкрементальный синк не перезагружает задачи без изменений, поэтому
+    # assignee в БД может отсутствовать — берём напрямую из Трекера.
+    keys = [r["issue_key"] for r in rows]
+    live: dict[str, dict] = {}
+    if TRACKER_TOKEN:
+        async def _fetch(client, key):
+            try:
+                return key, await tracker_request(client, "GET", f"/v2/issues/{key}")
+            except Exception:
+                return key, None
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                fetched = await asyncio.gather(*[_fetch(client, k) for k in keys])
+            live = {k: iss for k, iss in fetched if iss}
+        except Exception:
+            live = {}
+
     today = date.today()
     out = []
     for r in rows:
-        started = (r.get("status_start") or r.get("latest_ts") or "")[:10]
+        key = r["issue_key"]
+        iss = live.get(key)
+        if iss is not None:
+            st = iss.get("status", {}) or {}
+            st_id = str(st.get("id", ""))
+            # Задача уже вышла из статусов Арх. комитета — не показываем
+            if st_id and st_id not in ARCH_STATUSES:
+                continue
+            status_disp = ARCH_STATUSES.get(st_id) or st.get("display") or "—"
+            status_key = st_id or str(r["to_status"])
+            assignee = (iss.get("assignee") or {}).get("display", "") or ""
+            started = (iss.get("statusStartTime") or r.get("status_start") or r.get("latest_ts") or "")[:10]
+        else:
+            status_key = str(r["to_status"])
+            status_disp = ARCH_STATUSES.get(status_key) or r.get("status_display") or "—"
+            assignee = r.get("assignee") or ""
+            started = (r.get("status_start") or r.get("latest_ts") or "")[:10]
+
         days = 0
         if started:
             try:
                 days = max(0, (today - date.fromisoformat(started)).days)
             except ValueError:
                 days = 0
+
         out.append({
-            "key": r["issue_key"],
+            "key": key,
             "title": r["title"] or "—",
-            "url": f"https://tracker.yandex.ru/{r['issue_key']}",
+            "url": f"https://tracker.yandex.ru/{key}",
             "queue": r["queue"],
             "issueType": r.get("issue_type") or "story",
             "issueTypeDisplay": r.get("issue_type_display") or "Story",
-            "status": ARCH_STATUSES.get(str(r["to_status"])) or r.get("status_display") or "—",
-            "statusKey": str(r["to_status"]),
-            "assignee": r.get("assignee") or "",
+            "status": status_disp,
+            "statusKey": status_key,
+            "assignee": assignee,
             "since": started,
             "daysInStatus": days,
         })
