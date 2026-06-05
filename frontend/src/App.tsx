@@ -9,6 +9,7 @@ import { DonutChart } from "@/components/DonutChart"
 import { FunnelChart } from "@/components/FunnelChart"
 import { TimelineChart } from "@/components/TimelineChart"
 import { QueueBreakdown } from "@/components/QueueBreakdown"
+import { TypeBreakdown } from "@/components/TypeBreakdown"
 import { TypeFilter } from "@/components/TypeFilter"
 import { MonthlyChart } from "@/components/MonthlyChart"
 import { CycleTrendChart } from "@/components/CycleTrendChart"
@@ -448,8 +449,9 @@ export default function App() {
                 <Skeleton className="h-72 rounded-xl" />
               </div>
             ) : data && (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
                 <QueueBreakdown tasks={view} onShowTasks={setTaskModal} />
+                <TypeBreakdown tasks={view} onShowTasks={setTaskModal} />
                 <DonutChart tasks={view} onShowTasks={setTaskModal} />
               </div>
             )}
