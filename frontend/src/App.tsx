@@ -11,6 +11,7 @@ import { TimelineChart } from "@/components/TimelineChart"
 import { QueueBreakdown } from "@/components/QueueBreakdown"
 import { TypeFilter } from "@/components/TypeFilter"
 import { MonthlyChart } from "@/components/MonthlyChart"
+import { CycleTrendChart } from "@/components/CycleTrendChart"
 import { TaskTable } from "@/components/TaskTable"
 import { ArchCommitteeReport } from "@/components/ArchCommitteeReport"
 import { HealthStrip } from "@/components/HealthStrip"
@@ -419,6 +420,7 @@ export default function App() {
               <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
                 <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} onShowTasks={setTaskModal} />
                 <MonthlyChart tasks={view} onShowTasks={setTaskModal} />
+                <CycleTrendChart tasks={view} onShowTasks={setTaskModal} />
               </div>
             )}
 
