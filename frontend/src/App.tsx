@@ -13,6 +13,7 @@ import { TypeFilter } from "@/components/TypeFilter"
 import { MonthlyChart } from "@/components/MonthlyChart"
 import { TaskTable } from "@/components/TaskTable"
 import { ArchCommitteeReport } from "@/components/ArchCommitteeReport"
+import { HealthStrip } from "@/components/HealthStrip"
 import { TaskListModal, type TaskModalData } from "@/components/TaskListModal"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
@@ -379,7 +380,14 @@ export default function App() {
               </div>
             )}
 
-            {/* Отчёт: что сейчас в Арх. комитете + загрузка по исполнителям */}
+            {/* Слим-строка ключевых показателей процесса */}
+            {!loading && data && (
+              <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+                <HealthStrip tasks={view} stuck={archView.filter(t => t.daysInStatus >= 7).length} />
+              </div>
+            )}
+
+            {/* Отчёт: что сейчас в Арх. комитете */}
             {loading ? (
               <Skeleton className="h-64 rounded-xl" />
             ) : data && (

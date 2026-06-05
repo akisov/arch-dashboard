@@ -9,6 +9,7 @@ export interface Task {
   v1n: number
   v2n: number
   total: number
+  cycleDays?: number | null   // дней от входа до выхода из комитета (null — ещё внутри)
 }
 
 export interface QueueData {

@@ -287,6 +287,30 @@ async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
     cuts = {r["issue_key"]: {"v1n": int(r["v1n"] or 0), "v2n": int(r["v2n"] or 0)}
             for r in rows_to_dicts(cut_results[0])} if cut_results else {}
 
+    # Время прохождения комитета: от входа (180) до первого выхода из арх-статусов
+    trans_results = await turso_execute([stmt(f"""
+        SELECT issue_key, to_status, ts FROM transitions
+        WHERE issue_key IN ({key_ph})
+        ORDER BY ts ASC
+    """, task_keys)])
+    seq: dict[str, list] = {}
+    for tr in rows_to_dicts(trans_results[0]) if trans_results else []:
+        seq.setdefault(tr["issue_key"], []).append(tr)
+
+    def cycle_days(key: str):
+        items = seq.get(key, [])
+        entry = next((t["ts"] for t in items if str(t["to_status"]) == ENTRY_STATUS), None)
+        if not entry:
+            return None
+        exit_ts = next((t["ts"] for t in items
+                        if t["ts"] > entry and str(t["to_status"]) not in ARCH_STATUSES), None)
+        if not exit_ts:
+            return None  # ещё в комитете
+        try:
+            return max(0, (date.fromisoformat(exit_ts[:10]) - date.fromisoformat(entry[:10])).days)
+        except ValueError:
+            return None
+
     tasks, queues_out = [], {q: {"tasks": []} for q in queues}
     for r in rows:
         key = r["issue_key"]
@@ -301,6 +325,7 @@ async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
             "entryDate": (r["entry_ts"] or "")[:10],
             "v1n": c["v1n"], "v2n": c["v2n"],
             "total": c["v1n"] + c["v2n"],
+            "cycleDays": cycle_days(key),
         }
         tasks.append(task)
         if r["queue"] in queues_out:
