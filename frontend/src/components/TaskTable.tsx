@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, ArrowUpDown } from "lucide-react"
+import { ExternalLink, ArrowUpDown, Download, Flame } from "lucide-react"
 import type { Task } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-type Filter = "all" | "v1" | "v2" | "both" | "none" | "multi" | string
+type Filter = "all" | "v1" | "v2" | "both" | "none" | "multi" | "hot" | string
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all",   label: "Все" },
@@ -14,7 +14,27 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "both",  label: "Оба" },
   { key: "none",  label: "С первого раза" },
   { key: "multi", label: "2+ возврата" },
+  { key: "hot",   label: "🔥 3+ возврата" },
 ]
+
+function downloadCsv(tasks: Task[]) {
+  const headers = ["Ключ", "Название", "Тип", "Очередь", "Дата входа", "Возвраты АрхКом", "Возвраты ТА", "Всего возвратов", "Время прохождения, дней"]
+  const esc = (v: unknown) => {
+    const s = String(v ?? "")
+    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const lines = [headers, ...tasks.map(t => [
+    t.key, t.title, t.issueTypeDisplay, t.queue, t.entryDate ?? "",
+    t.v1n, t.v2n, t.total, t.cycleDays ?? "",
+  ])].map(r => r.map(esc).join(";")).join("\r\n")
+  const blob = new Blob(["﻿" + lines], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `arch-tasks-${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.appendChild(a); a.click(); a.remove()
+  URL.revokeObjectURL(url)
+}
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "—"
@@ -45,6 +65,7 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
   else if (activeFilter === "both")  filtered = tasks.filter(t => t.v1n > 0 && t.v2n > 0)
   else if (activeFilter === "none")  filtered = tasks.filter(t => t.total === 0)
   else if (activeFilter === "multi") filtered = tasks.filter(t => t.total >= 2)
+  else if (activeFilter === "hot")   filtered = tasks.filter(t => t.total >= 3)
   else if (activeFilter.startsWith("cuts")) {
     const n = parseInt(activeFilter.slice(4))
     filtered = tasks.filter(t => t.total === n)
@@ -73,7 +94,7 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
           <span className="text-sm font-bold text-foreground">Задачи</span>
           <span className="ml-2 text-xs text-muted-foreground">{sorted.length} {plural(sorted.length)}</span>
         </div>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap items-center">
           {FILTERS.map(f => (
             <button key={f.key} onClick={() => onFilter(f.key)}
               className={cn(
@@ -85,6 +106,13 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
               {f.label}
             </button>
           ))}
+          <button
+            onClick={() => downloadCsv(sorted)}
+            disabled={sorted.length === 0}
+            title="Скачать текущий список в CSV"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground transition-all disabled:opacity-40 disabled:cursor-default">
+            <Download className="w-3.5 h-3.5" /> CSV
+          </button>
         </div>
       </div>
 
@@ -111,8 +139,10 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {sorted.map(t => (
-                <tr key={t.key} className="hover:bg-secondary/30 transition-colors group">
+              {sorted.map(t => {
+                const hot = t.total >= 3
+                return (
+                <tr key={t.key} className={cn("transition-colors group", hot ? "bg-rose-500/[0.06] hover:bg-rose-500/[0.12]" : "hover:bg-secondary/30")}>
                   <td className={cn(td, "pl-5 pr-2")}>
                     <a href={t.url} target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-1 text-primary font-mono text-xs font-bold hover:underline whitespace-nowrap">
@@ -135,14 +165,18 @@ export function TaskTable({ tasks, activeFilter, onFilter }: TaskTableProps) {
                   </td>
                   <td className={cn(td, "px-2 text-center")} style={{ paddingRight: 20 }}>
                     {t.total > 0
-                      ? <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-black">
-                          {t.total}
+                      ? <span className={cn(
+                          "inline-flex items-center justify-center gap-0.5 min-w-7 h-7 px-1.5 rounded-full text-sm font-black",
+                          hot ? "bg-rose-500/15 text-rose-600 dark:text-rose-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                        )}>
+                          {hot && <Flame className="w-3 h-3" />}{t.total}
                         </span>
                       : <span className="text-muted-foreground/30 text-sm">—</span>
                     }
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         )}
