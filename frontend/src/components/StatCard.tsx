@@ -68,7 +68,7 @@ export function StatCard({ label, value, sub, icon, color, onClick, delta, delta
         boxShadow: hovered ? `0 8px 28px ${c.glow}, 0 0 0 1px ${c.border}` : "none",
       }}
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border bg-card flex flex-col justify-between gap-3 p-5 h-full",
+        "relative overflow-hidden rounded-xl border border-border bg-card flex flex-col gap-3 p-5 h-full",
         onClick && "cursor-pointer"
       )}
     >
