@@ -28,12 +28,21 @@ const FUN_MESSAGES = [
 ]
 
 export function SyncProgress({ title, msg, pct, hint }: SyncProgressProps) {
-  const [i, setI] = useState(0)
+  // Случайная фраза при старте и далее каждые ~2.2с (без повтора подряд)
+  const [idx, setIdx] = useState(() => Math.floor(Math.random() * FUN_MESSAGES.length))
+  const [tick, setTick] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setI(x => x + 1), 2200)
+    const t = setInterval(() => {
+      setIdx(prev => {
+        let n = prev
+        while (n === prev) n = Math.floor(Math.random() * FUN_MESSAGES.length)
+        return n
+      })
+      setTick(x => x + 1)
+    }, 2200)
     return () => clearInterval(t)
   }, [])
-  const fun = FUN_MESSAGES[i % FUN_MESSAGES.length]
+  const fun = FUN_MESSAGES[idx]
 
   return (
     <div className="rounded-xl border border-border bg-card p-12 text-center">
@@ -45,7 +54,7 @@ export function SyncProgress({ title, msg, pct, hint }: SyncProgressProps) {
       <p className="text-lg font-bold text-foreground mb-2">{title}</p>
 
       {/* Пасхалка: крутящиеся смешные надписи */}
-      <p key={i} className="text-base font-semibold text-primary mb-1 min-h-[24px] animate-fade-in-up">
+      <p key={tick} className="text-base font-semibold text-primary mb-1 min-h-[24px] animate-fade-in-up">
         {fun}
       </p>
       <p className="text-xs text-muted-foreground mb-6 min-h-[16px]">{msg}</p>
