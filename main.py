@@ -427,10 +427,11 @@ async def query_arch_current(queues: list[str]):
             assignee = r.get("assignee") or ""
             started = (r.get("status_start") or r.get("latest_ts") or "")[:10]
 
+        # Трекер считает день входа в статус как 1-й день (включительно)
         days = 0
         if started:
             try:
-                days = max(0, (today - date.fromisoformat(started)).days)
+                days = max(1, (today - date.fromisoformat(started)).days + 1)
             except ValueError:
                 days = 0
 
