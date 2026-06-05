@@ -1,7 +1,9 @@
 import os
 import asyncio
 import httpx
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+
+MSK = timezone(timedelta(hours=3))   # даты статусов в Трекере — по московскому времени
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
@@ -401,7 +403,7 @@ async def query_arch_current(queues: list[str]):
         except Exception:
             live = {}
 
-    today = date.today()
+    today = datetime.now(MSK).date()
     out = []
     for r in rows:
         key = r["issue_key"]
