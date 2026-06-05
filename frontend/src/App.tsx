@@ -15,6 +15,7 @@ import { CycleTrendChart } from "@/components/CycleTrendChart"
 import { TaskTable } from "@/components/TaskTable"
 import { ArchCommitteeReport } from "@/components/ArchCommitteeReport"
 import { HealthStrip } from "@/components/HealthStrip"
+import { InsightBar } from "@/components/InsightBar"
 import { TaskListModal, type TaskModalData } from "@/components/TaskListModal"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
@@ -382,9 +383,10 @@ export default function App() {
               </div>
             )}
 
-            {/* Слим-строка ключевых показателей процесса */}
+            {/* Авто-инсайт + слим-строка показателей */}
             {!loading && data && (
-              <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+                <InsightBar tasks={view} prevTasks={prevView} />
                 <HealthStrip tasks={view} stuck={archView.filter(t => t.daysInStatus >= 7).length} />
               </div>
             )}
