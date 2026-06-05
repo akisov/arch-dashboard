@@ -30,14 +30,14 @@ export function InsightBar({ tasks, prevTasks }: Props) {
 
   const items: { icon: string; text: string; tone: Tone }[] = []
 
-  // 1. Качество прохождения + тренд
+  // 1. Качество прохождения + тренд (сравниваем только при достаточной выборке)
   let qualityText = `${pctOk}% задач прошли с первого раза`
   let qualityTone: Tone = pctOk >= 70 ? "good" : pctOk >= 50 ? "warn" : "bad"
-  if (prevTasks && prevTasks.length) {
+  if (prevTasks && prevTasks.length >= 5) {
     const prevPct = pctOf(prevTasks, t => t.total === 0)
     const diff = pctOk - prevPct
-    if (diff >= 3) { qualityText += ` — качество выросло на ${diff} пп`; qualityTone = "good" }
-    else if (diff <= -3) { qualityText += ` — качество упало на ${Math.abs(diff)} пп`; qualityTone = "bad" }
+    if (diff >= 3) { qualityText += ` — качество выросло (было ${prevPct}%)`; qualityTone = "good" }
+    else if (diff <= -3) { qualityText += ` — качество снизилось (было ${prevPct}%)`; qualityTone = "bad" }
     else qualityText += " — на уровне прошлого периода"
   }
   items.push({ icon: "🎯", text: qualityText, tone: qualityTone })

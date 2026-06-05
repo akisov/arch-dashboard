@@ -252,7 +252,7 @@ async def sync_queue(client, queue, updated_from, send):
     await turso_execute([stmt(
         "INSERT INTO sync_log(queue,last_synced) VALUES(?,?) "
         "ON CONFLICT(queue) DO UPDATE SET last_synced=excluded.last_synced",
-        [queue, date.today().isoformat()]
+        [queue, datetime.now(MSK).strftime("%Y-%m-%d %H:%M")]
     )])
 
 # ── Query ─────────────────────────────────────────────────────────────────────
@@ -475,7 +475,7 @@ async def sync(full: bool = Query(False), queues: str = Query("POOLING,DOSTAVKAP
         async with httpx.AsyncClient(timeout=60) as client:
             for qi, queue in enumerate(selected):
                 updated_from = (date.today() - timedelta(days=730)).isoformat() \
-                    if full or queue not in info else info[queue]
+                    if full or queue not in info else info[queue][:10]
                 q_msgs: asyncio.Queue = asyncio.Queue()
 
                 async def _send(m, q=q_msgs):

@@ -204,6 +204,8 @@ export default function App() {
   })()
   const pm = prevView ? calcMetrics(prevView) : null
   const d = (cur: number, prev: number | undefined) => prev === undefined ? undefined : cur - prev
+  // Сравнение качества (%) надёжно только при достаточной выборке прошлого периода
+  const pmReliable = !!prevView && prevView.length >= 5
 
   // Отчёт «сейчас в Арх. комитете» — учитываем фильтры очереди и типа
   const archView = archTasks
@@ -237,7 +239,7 @@ export default function App() {
               <RefreshCw className={cn("w-3.5 h-3.5", syncing && "animate-spin")} />
               <span>{syncing ? "Синкуем…" : "Синк"}</span>
               {lastSync && !syncing && (
-                <span className="text-muted-foreground/60 font-normal">· {lastSync}</span>
+                <span className="text-muted-foreground/60 font-normal">· {lastSync.slice(0, 10)}</span>
               )}
             </button>
             <ThemeToggle />
@@ -375,12 +377,12 @@ export default function App() {
               </div>
             ) : data && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-stretch">
-                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="Пришло в АрхКом" value={total}      sub="задач за период"           icon="📋" color="purple" delta={d(m.total, pm?.total)} /></div>
-                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="С первого раза"  value={`${m.pctOk}%`} sub={`${m.ok} задач без возвратов`} icon="🎯" color="teal" delta={d(m.pctOk, pm?.pctOk)} deltaSuffix="пп" /></div>
-                <div className="animate-fade-in-up stagger-2 h-full"><StatCard label="АрхКом"          value={m.v1}      sub="задач на ревью аналитики"  icon="🔄" color="teal" delta={d(m.v1, pm?.v1)} invert /></div>
-                <div className="animate-fade-in-up stagger-3 h-full"><StatCard label="ТА"              value={m.v2}      sub="задач вернули на уточнение" icon="↩️" color="rose" delta={d(m.v2, pm?.v2)} invert /></div>
-                <div className="animate-fade-in-up stagger-4 h-full"><StatCard label="Оба типа"        value={m.both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" delta={d(m.both, pm?.both)} invert /></div>
-                <div className="animate-fade-in-up stagger-5 h-full"><StatCard label="Всего возвратов" value={m.cuts}    sub="суммарно переходов"         icon="🔁" color="sky" delta={d(m.cuts, pm?.cuts)} invert /></div>
+                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="Пришло в АрхКом" value={total}      sub="задач за период"           icon="📋" color="purple" delta={d(m.total, pm?.total)} onClick={() => setTaskModal({ title: "Пришло в АрхКом за период", tasks: view })} /></div>
+                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="С первого раза"  value={`${m.pctOk}%`} sub={`${m.ok} задач без возвратов`} icon="🎯" color="teal" delta={pmReliable ? d(m.pctOk, pm?.pctOk) : undefined} deltaSuffix="%" onClick={() => setTaskModal({ title: "Прошли с первого раза", tasks: view.filter(t => t.total === 0) })} /></div>
+                <div className="animate-fade-in-up stagger-2 h-full"><StatCard label="АрхКом"          value={m.v1}      sub="задач на ревью аналитики"  icon="🔄" color="teal" delta={d(m.v1, pm?.v1)} invert onClick={() => setTaskModal({ title: "Вернул АрхКом", tasks: view.filter(t => t.v1n > 0) })} /></div>
+                <div className="animate-fade-in-up stagger-3 h-full"><StatCard label="ТА"              value={m.v2}      sub="задач вернули на уточнение" icon="↩️" color="rose" delta={d(m.v2, pm?.v2)} invert onClick={() => setTaskModal({ title: "Вернул ТА", tasks: view.filter(t => t.v2n > 0) })} /></div>
+                <div className="animate-fade-in-up stagger-4 h-full"><StatCard label="Оба типа"        value={m.both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" delta={d(m.both, pm?.both)} invert onClick={() => setTaskModal({ title: "Вернули и АрхКом, и ТА", tasks: view.filter(t => t.v1n > 0 && t.v2n > 0) })} /></div>
+                <div className="animate-fade-in-up stagger-5 h-full"><StatCard label="Всего возвратов" value={m.cuts}    sub="суммарно переходов"         icon="🔁" color="sky" delta={d(m.cuts, pm?.cuts)} invert onClick={() => setTaskModal({ title: "Задачи с возвратами", tasks: view.filter(t => t.total > 0) })} /></div>
               </div>
             )}
 
@@ -388,7 +390,7 @@ export default function App() {
             {!loading && data && (
               <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
                 <InsightBar tasks={view} prevTasks={prevView} />
-                <HealthStrip tasks={view} stuck={archView.filter(t => t.daysInStatus >= 7).length} />
+                <HealthStrip tasks={view} stuck={archView.filter(t => t.daysInStatus >= 7).length} onShowTasks={setTaskModal} />
               </div>
             )}
 
