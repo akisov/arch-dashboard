@@ -97,6 +97,7 @@ export default function App() {
   const [queue, setQueue] = useState<Queue>("ALL")
   const [filter, setFilter] = useState("all")
   const [typeFilter, setTypeFilter] = useState("all")
+  const [timeView, setTimeView] = useState<"weeks" | "months" | "cycle">("weeks")
 
   const [data, setData] = useState<DashboardData | null>(null)
   const [prevData, setPrevData] = useState<DashboardData | null>(null)
@@ -410,17 +411,31 @@ export default function App() {
               </div>
             )}
 
-            {/* Timeline + Monthly */}
+            {/* Динамика — вкладки */}
             {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-64 rounded-xl" />
-                <Skeleton className="h-64 rounded-xl" />
-              </div>
+              <Skeleton className="h-72 rounded-xl" />
             ) : data && (
-              <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} onShowTasks={setTaskModal} />
-                <MonthlyChart tasks={view} onShowTasks={setTaskModal} />
-                <CycleTrendChart tasks={view} onShowTasks={setTaskModal} />
+              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+                <div className="flex gap-1 bg-secondary/60 rounded-lg p-1 w-fit">
+                  {([
+                    ["weeks", "📈 По неделям"],
+                    ["months", "📊 По месяцам"],
+                    ["cycle", "⏱ Время прохождения"],
+                  ] as const).map(([k, label]) => (
+                    <button key={k} onClick={() => setTimeView(k)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap",
+                        timeView === k
+                          ? "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(108,99,255,0.4)]"
+                          : "text-muted-foreground hover:text-foreground hover:bg-card"
+                      )}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {timeView === "weeks" && <TimelineChart tasks={view} dateFrom={data.dateFrom} dateTo={data.dateTo} onShowTasks={setTaskModal} />}
+                {timeView === "months" && <MonthlyChart tasks={view} onShowTasks={setTaskModal} />}
+                {timeView === "cycle" && <CycleTrendChart tasks={view} onShowTasks={setTaskModal} />}
               </div>
             )}
 
