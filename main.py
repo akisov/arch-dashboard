@@ -140,10 +140,13 @@ async def tracker_request(client: httpx.AsyncClient, method: str, path: str, bod
 ISSUE_TYPES = ["story", "analytics", "technicaldebt", "improvement", "elaboration"]
 
 async def fetch_issues_page(client, queue, updated_from, page):
+    # updated_from может быть датой ("2024-06-05") или полной меткой
+    # ("2026-06-05T14:30:00") — для даты добавляем начало суток
+    frm = updated_from if "T" in updated_from else f"{updated_from}T00:00:00"
     data = await tracker_request(client, "POST",
         f"/v2/issues/_search?perPage=100&page={page}",
         {"filter": {"queue": queue, "type": ISSUE_TYPES,
-                    "updatedAt": {"from": f"{updated_from}T00:00:00", "to": "2099-01-01T00:00:00"}}})
+                    "updatedAt": {"from": frm, "to": "2099-01-01T00:00:00"}}})
     return data if isinstance(data, list) else []
 
 async def fetch_changelog(client, key):
@@ -255,7 +258,7 @@ async def sync_queue(client, queue, updated_from, send):
     await turso_execute([stmt(
         "INSERT INTO sync_log(queue,last_synced) VALUES(?,?) "
         "ON CONFLICT(queue) DO UPDATE SET last_synced=excluded.last_synced",
-        [queue, datetime.now(MSK).strftime("%Y-%m-%d %H:%M")]
+        [queue, datetime.now(MSK).strftime("%Y-%m-%dT%H:%M:%S")]
     )])
 
 # ── Query ─────────────────────────────────────────────────────────────────────
@@ -478,8 +481,10 @@ async def sync(full: bool = Query(False), queues: str = Query("POOLING,DOSTAVKAP
         info = await get_sync_info()
         async with httpx.AsyncClient(timeout=60) as client:
             for qi, queue in enumerate(selected):
+                # Инкрементально — от точной метки последнего синка (чч:мм:сс),
+                # чтобы тянуть только изменения и синк был быстрым
                 updated_from = (date.today() - timedelta(days=730)).isoformat() \
-                    if full or queue not in info else info[queue][:10]
+                    if full or queue not in info else info[queue]
                 q_msgs: asyncio.Queue = asyncio.Queue()
 
                 async def _send(m, q=q_msgs):

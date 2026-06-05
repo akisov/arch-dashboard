@@ -6,13 +6,13 @@ interface SyncBarProps {
   loading: boolean
 }
 
-// "2026-06-05 14:30" / "2026-06-05" → "05.06.2026, 14:30" / "05.06.2026"
+// "2026-06-05T14:30:00" / "2026-06-05 14:30" / "2026-06-05" → "05.06.2026, 14:30"
 function fmt(v: string): string {
-  const [datePart, timePart] = v.split(" ")
+  const [datePart, timePart] = v.replace("T", " ").split(" ")
   const [y, m, d] = datePart.split("-")
   if (!y || !m || !d) return v
   const date = `${d}.${m}.${y}`
-  return timePart ? `${date}, ${timePart}` : date
+  return timePart ? `${date}, ${timePart.slice(0, 5)}` : date
 }
 
 export function SyncBar({ info, loading }: SyncBarProps) {
