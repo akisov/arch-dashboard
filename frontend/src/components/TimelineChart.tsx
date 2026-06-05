@@ -25,7 +25,7 @@ function fmtDate(iso: string | null): string {
   return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`
 }
 
-interface WeekData { date: string; total: number; ak: number; ta: number; tasks: Task[] }
+interface WeekData { date: string; wk: string; total: number; ak: number; ta: number }
 
 export function TimelineChart({ tasks, dateFrom, dateTo, onShowTasks }: TimelineChartProps) {
   const { theme } = useTheme()
@@ -39,24 +39,24 @@ export function TimelineChart({ tasks, dateFrom, dateTo, onShowTasks }: Timeline
   const weekArr: WeekData[] = []
   const weekByDate: Record<string, WeekData> = {}
   for (const cur = new Date(mon); cur<=end; cur.setDate(cur.getDate()+7)) {
-    const w: WeekData = { date: fmtDate(cur.toISOString().slice(0,10)), total:0, ak:0, ta:0, tasks:[] }
+    const wk = cur.toISOString().slice(0,10)
+    const w: WeekData = { date: fmtDate(wk), wk, total:0, ak:0, ta:0 }
     weekArr.push(w)
-    weekByDate[cur.toISOString().slice(0,10)] = w
+    weekByDate[wk] = w
   }
   // Бакетируем события по их датам: вход / возврат АрхКома / возврат ТА
-  const addEvent = (dateStr: string, kind: "entry"|"ak"|"ta", t: Task) => {
+  const addEvent = (dateStr: string, kind: "entry"|"ak"|"ta") => {
     const wk = weekStart(dateStr)
     let w = weekByDate[wk]
-    if (!w) { w = { date: fmtDate(wk), total:0, ak:0, ta:0, tasks:[] }; weekByDate[wk] = w; weekArr.push(w) }
+    if (!w) { w = { date: fmtDate(wk), wk, total:0, ak:0, ta:0 }; weekByDate[wk] = w; weekArr.push(w) }
     if (kind === "entry") w.total++
     else if (kind === "ak") w.ak++
     else w.ta++
-    if (!w.tasks.some(x => x.key === t.key)) w.tasks.push(t)
   }
   for (const t of tasks) {
-    for (const d of t.entryDates) addEvent(d, "entry", t)
-    for (const d of t.v1Dates)    addEvent(d, "ak", t)
-    for (const d of t.v2Dates)    addEvent(d, "ta", t)
+    for (const d of t.entryDates) addEvent(d, "entry")
+    for (const d of t.v1Dates)    addEvent(d, "ak")
+    for (const d of t.v2Dates)    addEvent(d, "ta")
   }
   const data = weekArr.sort((a,b)=>a.date.localeCompare(b.date))
 
@@ -84,11 +84,21 @@ export function TimelineChart({ tasks, dateFrom, dateTo, onShowTasks }: Timeline
   if (!data.length) return null
 
   // activeDot с onClick — открывает модалку для нужной недели
-  const openWeek = (w: WeekData) => onShowTasks?.({
-    title: `Неделя с ${w.date}`,
-    subtitle: `Пришло ${w.total} · АрхКом вернул ${w.ak} · ТА вернул ${w.ta}`,
-    tasks: w.tasks,
-  })
+  const openWeek = (w: WeekData) => {
+    const inWk = (d: string) => weekStart(d) === w.wk
+    const weekTasks = tasks.map(t => {
+      const v1 = t.v1Dates.filter(inWk).length
+      const v2 = t.v2Dates.filter(inWk).length
+      const entered = t.entryDates.some(inWk)
+      if (!v1 && !v2 && !entered) return null
+      return { ...t, entered, v1n: v1, v2n: v2, total: v1 + v2 }
+    }).filter((t): t is Task => t !== null)
+    onShowTasks?.({
+      title: `Неделя с ${w.date}`,
+      subtitle: `Пришло ${w.total} · возвраты АрхКом ${w.ak} · ТА ${w.ta}`,
+      tasks: weekTasks,
+    })
+  }
   const makeActiveDot = (color: string) =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ({ cx, cy, payload }: any) => (

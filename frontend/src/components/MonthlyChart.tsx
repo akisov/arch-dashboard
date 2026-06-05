@@ -20,7 +20,7 @@ function monthLabel(d: string) {
   return `${MONTH_NAMES[parseInt(m) - 1]} ${y.slice(2)}`
 }
 
-interface MonthData { key: string; label: string; entered: number; ak: number; ta: number; keys: Set<string> }
+interface MonthData { key: string; label: string; entered: number; ak: number; ta: number }
 
 export function MonthlyChart({ tasks, onShowTasks }: MonthlyChartProps) {
   const { theme } = useTheme()
@@ -30,12 +30,12 @@ export function MonthlyChart({ tasks, onShowTasks }: MonthlyChartProps) {
   const map: Record<string, MonthData> = {}
   const bucket = (d: string) => {
     const k = monthKey(d)
-    return (map[k] ||= { key: k, label: monthLabel(d), entered: 0, ak: 0, ta: 0, keys: new Set() })
+    return (map[k] ||= { key: k, label: monthLabel(d), entered: 0, ak: 0, ta: 0 })
   }
   for (const t of tasks) {
-    for (const d of t.entryDates) { const b = bucket(d); b.entered++; b.keys.add(t.key) }
-    for (const d of t.v1Dates)    { const b = bucket(d); b.ak++;      b.keys.add(t.key) }
-    for (const d of t.v2Dates)    { const b = bucket(d); b.ta++;      b.keys.add(t.key) }
+    for (const d of t.entryDates) bucket(d).entered++
+    for (const d of t.v1Dates)    bucket(d).ak++
+    for (const d of t.v2Dates)    bucket(d).ta++
   }
   const data = Object.keys(map).sort().map(k => map[k])
   if (data.length === 0) return null
@@ -66,11 +66,21 @@ export function MonthlyChart({ tasks, onShowTasks }: MonthlyChartProps) {
     )
   }
 
-  const open = (m: MonthData) => onShowTasks?.({
-    title: `События за ${m.label}`,
-    subtitle: `Пришло ${m.entered} · возвраты АрхКом ${m.ak} · ТА ${m.ta}`,
-    tasks: tasks.filter(t => m.keys.has(t.key)),
-  })
+  const open = (m: MonthData) => {
+    // Счётчики по событиям ИМЕННО этого месяца (а не за весь период)
+    const monthTasks = tasks.map(t => {
+      const v1 = t.v1Dates.filter(d => monthKey(d) === m.key).length
+      const v2 = t.v2Dates.filter(d => monthKey(d) === m.key).length
+      const entered = t.entryDates.some(d => monthKey(d) === m.key)
+      if (!v1 && !v2 && !entered) return null
+      return { ...t, entered, v1n: v1, v2n: v2, total: v1 + v2 }
+    }).filter((t): t is Task => t !== null)
+    onShowTasks?.({
+      title: `События за ${m.label}`,
+      subtitle: `Пришло ${m.entered} · возвраты АрхКом ${m.ak} · ТА ${m.ta}`,
+      tasks: monthTasks,
+    })
+  }
   const handleClick = (_: unknown, index: number) => { const m = data[index]; if (m) open(m) }
 
   return (
