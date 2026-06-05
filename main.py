@@ -264,49 +264,63 @@ async def sync_queue(client, queue, updated_from, send):
 # ── Query ─────────────────────────────────────────────────────────────────────
 
 async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
+    """Событийная модель: считаем по дате самого перехода.
+    Задача попадает в выборку, если в периоде у неё был хотя бы один из событий:
+      • вход в комитет        (→ 180)
+      • возврат АрхКома       (180 → 151)
+      • возврат ТА            (145 → 175)
+    Возвраты считаются независимо от того, когда задача пришла в комитет."""
     q_ph = ",".join("?" * len(queues))
 
-    results = await turso_execute([
-        stmt(f"""
-            SELECT t.issue_key, MIN(t.ts) AS entry_ts, tk.title, tk.queue,
-                   tk.issue_type, tk.issue_type_display
-            FROM transitions t
-            JOIN tasks tk ON tk.key = t.issue_key
-            WHERE t.to_status = ?
-              AND substr(t.ts,1,10) >= ?
-              AND substr(t.ts,1,10) <= ?
-              AND tk.queue IN ({q_ph})
-            GROUP BY t.issue_key, tk.title, tk.queue, tk.issue_type, tk.issue_type_display
-        """, [ENTRY_STATUS, date_from, date_to, *queues]),
-    ])
+    ev = await turso_execute([stmt(f"""
+        SELECT tr.issue_key, tr.from_status AS frm, tr.to_status AS too,
+               substr(tr.ts,1,10) AS d,
+               tk.title, tk.queue, tk.issue_type, tk.issue_type_display
+        FROM transitions tr
+        JOIN tasks tk ON tk.key = tr.issue_key
+        WHERE substr(tr.ts,1,10) >= ? AND substr(tr.ts,1,10) <= ?
+          AND tk.queue IN ({q_ph})
+          AND ( tr.to_status = ?
+             OR (tr.from_status = ? AND tr.to_status = ?)
+             OR (tr.from_status = ? AND tr.to_status = ?) )
+    """, [date_from, date_to, *queues, ENTRY_STATUS, V1_FROM, V1_TO, V2_FROM, V2_TO])])
 
-    rows = rows_to_dicts(results[0]) if results else []
+    rows = rows_to_dicts(ev[0]) if ev else []
     rows = [r for r in rows if not is_test_task(r.get("title"))]
-    task_keys = [r["issue_key"] for r in rows]
 
-    if not task_keys:
+    if not rows:
         return {"tasks": [], "queues": {q: {"tasks": []} for q in queues},
                 "dateFrom": date_from, "dateTo": date_to}
 
-    key_ph = ",".join("?" * len(task_keys))
-    cut_results = await turso_execute([stmt(f"""
-        SELECT issue_key,
-               SUM(CASE WHEN from_status=? AND to_status=? AND substr(ts,1,10)>=? AND substr(ts,1,10)<=? THEN 1 ELSE 0 END) as v1n,
-               SUM(CASE WHEN from_status=? AND to_status=? AND substr(ts,1,10)>=? AND substr(ts,1,10)<=? THEN 1 ELSE 0 END) as v2n
-        FROM transitions
-        WHERE issue_key IN ({key_ph})
-        GROUP BY issue_key
-    """, [V1_FROM, V1_TO, date_from, date_to, V2_FROM, V2_TO, date_from, date_to, *task_keys])])
+    tmap: dict[str, dict] = {}
+    for r in rows:
+        k = r["issue_key"]
+        t = tmap.get(k)
+        if t is None:
+            t = tmap[k] = {
+                "key": k, "title": r["title"] or "—",
+                "url": f"https://tracker.yandex.ru/{k}",
+                "queue": r["queue"], "issueType": r.get("issue_type") or "story",
+                "issueTypeDisplay": r.get("issue_type_display") or "Story",
+                "entryDates": [], "v1Dates": [], "v2Dates": [],
+            }
+        frm, too, d = str(r["frm"]), str(r["too"]), r["d"]
+        if too == ENTRY_STATUS:
+            t["entryDates"].append(d)
+        elif frm == V1_FROM and too == V1_TO:
+            t["v1Dates"].append(d)
+        elif frm == V2_FROM and too == V2_TO:
+            t["v2Dates"].append(d)
 
-    cuts = {r["issue_key"]: {"v1n": int(r["v1n"] or 0), "v2n": int(r["v2n"] or 0)}
-            for r in rows_to_dicts(cut_results[0])} if cut_results else {}
+    keys = list(tmap)
+    key_ph = ",".join("?" * len(keys))
 
-    # Время прохождения комитета: от входа (180) до первого выхода из арх-статусов
+    # Полная история переходов — для времени прохождения комитета
     trans_results = await turso_execute([stmt(f"""
         SELECT issue_key, to_status, ts FROM transitions
         WHERE issue_key IN ({key_ph})
         ORDER BY ts ASC
-    """, task_keys)])
+    """, keys)])
     seq: dict[str, list] = {}
     for tr in rows_to_dicts(trans_results[0]) if trans_results else []:
         seq.setdefault(tr["issue_key"], []).append(tr)
@@ -326,24 +340,19 @@ async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
             return None
 
     tasks, queues_out = [], {q: {"tasks": []} for q in queues}
-    for r in rows:
-        key = r["issue_key"]
-        c = cuts.get(key, {"v1n": 0, "v2n": 0})
+    for k, t in tmap.items():
+        v1n, v2n = len(t["v1Dates"]), len(t["v2Dates"])
+        entered = len(t["entryDates"]) > 0
         task = {
-            "key": key,
-            "title": r["title"] or "—",
-            "url": f"https://tracker.yandex.ru/{key}",
-            "queue": r["queue"],
-            "issueType": r.get("issue_type") or "story",
-            "issueTypeDisplay": r.get("issue_type_display") or "Story",
-            "entryDate": (r["entry_ts"] or "")[:10],
-            "v1n": c["v1n"], "v2n": c["v2n"],
-            "total": c["v1n"] + c["v2n"],
-            "cycleDays": cycle_days(key),
+            **t,
+            "entered": entered,
+            "entryDate": sorted(t["entryDates"])[0] if entered else None,
+            "v1n": v1n, "v2n": v2n, "total": v1n + v2n,
+            "cycleDays": cycle_days(k),
         }
         tasks.append(task)
-        if r["queue"] in queues_out:
-            queues_out[r["queue"]]["tasks"].append(task)
+        if t["queue"] in queues_out:
+            queues_out[t["queue"]]["tasks"].append(task)
 
     return {"tasks": tasks, "queues": queues_out, "dateFrom": date_from, "dateTo": date_to}
 

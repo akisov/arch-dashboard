@@ -24,8 +24,10 @@ function plural(n: number, one: string, few: string, many: string) {
 }
 
 export function QueueBreakdown({ tasks, onShowTasks }: QueueBreakdownProps) {
-  const total = tasks.length
-  const maxCount = Math.max(...QUEUES.map(q => tasks.filter(t => t.queue === q).length), 1)
+  // Распределение пришедших в комитет по очередям
+  const ent = tasks.filter(t => t.entered)
+  const total = ent.length
+  const maxCount = Math.max(...QUEUES.map(q => ent.filter(t => t.queue === q).length), 1)
 
   return (
     <Card>
@@ -37,7 +39,7 @@ export function QueueBreakdown({ tasks, onShowTasks }: QueueBreakdownProps) {
 
         <div className="space-y-4">
           {QUEUES.map(q => {
-            const qTasks   = tasks.filter(t => t.queue === q)
+            const qTasks   = ent.filter(t => t.queue === q)
             const qAk      = qTasks.filter(t => t.v1n > 0).length
             const qTa      = qTasks.filter(t => t.v2n > 0).length
             const qCount   = qTasks.length
@@ -78,9 +80,9 @@ export function QueueBreakdown({ tasks, onShowTasks }: QueueBreakdownProps) {
         {/* Pass rate summary */}
         <div className="mt-5 pt-4 border-t border-border grid grid-cols-3 gap-3 text-center">
           {[
-            { label: "С первого раза", value: tasks.filter(t => t.total === 0), color: "text-emerald-600 dark:text-emerald-400" },
-            { label: "Вернул АрхКом",  value: tasks.filter(t => t.v1n > 0),    color: "text-[hsl(166,76%,36%)]" },
-            { label: "Вернул ТА",      value: tasks.filter(t => t.v2n > 0),    color: "text-rose-600 dark:text-rose-400" },
+            { label: "С первого раза", value: ent.filter(t => t.total === 0), color: "text-emerald-600 dark:text-emerald-400" },
+            { label: "Вернул АрхКом",  value: tasks.filter(t => t.v1n > 0),   color: "text-[hsl(166,76%,36%)]" },
+            { label: "Вернул ТА",      value: tasks.filter(t => t.v2n > 0),   color: "text-rose-600 dark:text-rose-400" },
           ].map(s => (
             <button key={s.label}
               onClick={() => s.value.length > 0 && onShowTasks?.({ title: s.label, tasks: s.value })}

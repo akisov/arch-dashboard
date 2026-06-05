@@ -96,7 +96,7 @@ export function ReturnsCard({ tasks, totalTasks, onShowTasks }: ReturnsCardProps
 
                 {/* Прогресс-бар */}
                 <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                  <div className={cn("h-full rounded-full transition-all duration-700", r.bar)} style={{ width: `${Math.max(pct, matched.length > 0 ? 2 : 0)}%` }} />
+                  <div className={cn("h-full rounded-full transition-all duration-700", r.bar)} style={{ width: `${Math.min(100, Math.max(pct, matched.length > 0 ? 2 : 0))}%` }} />
                 </div>
 
                 {matched.length > 0 && (

@@ -5,7 +5,11 @@ export interface Task {
   queue: string
   issueType: string       // story | analytics | technicaldebt | improvement | elaboration
   issueTypeDisplay: string // Человекочитаемое название
-  entryDate: string | null
+  entryDate: string | null    // дата входа в комитет в периоде (null — вошла раньше)
+  entered: boolean            // был ли вход (→180) в периоде
+  entryDates: string[]        // даты входов в периоде
+  v1Dates: string[]           // даты возвратов АрхКома в периоде
+  v2Dates: string[]           // даты возвратов ТА в периоде
   v1n: number
   v2n: number
   total: number

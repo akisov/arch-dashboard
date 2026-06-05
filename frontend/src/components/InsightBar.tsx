@@ -22,25 +22,29 @@ function pctOf(tasks: Task[], pred: (t: Task) => boolean) {
 export function InsightBar({ tasks, prevTasks }: Props) {
   if (tasks.length === 0) return null
 
-  const total = tasks.length
-  const v1 = tasks.filter(t => t.v1n > 0).length   // вернул АрхКом
-  const v2 = tasks.filter(t => t.v2n > 0).length   // вернул ТА
-  const pctOk = pctOf(tasks, t => t.total === 0)
+  const entrants = tasks.filter(t => t.entered)
+  const total = entrants.length
+  const v1 = tasks.filter(t => t.v1n > 0).length   // вернул АрхКом (по всем)
+  const v2 = tasks.filter(t => t.v2n > 0).length   // вернул ТА (по всем)
+  const pctOk = pctOf(entrants, t => t.total === 0)
   const worst = [...tasks].sort((a, b) => b.total - a.total)[0]
 
   const items: { icon: string; text: string; tone: Tone }[] = []
 
   // 1. Качество прохождения + тренд (сравниваем только при достаточной выборке)
-  let qualityText = `${pctOk}% задач прошли с первого раза`
-  let qualityTone: Tone = pctOk >= 70 ? "good" : pctOk >= 50 ? "warn" : "bad"
-  if (prevTasks && prevTasks.length >= 5) {
-    const prevPct = pctOf(prevTasks, t => t.total === 0)
-    const diff = pctOk - prevPct
-    if (diff >= 3) { qualityText += ` — качество выросло (было ${prevPct}%)`; qualityTone = "good" }
-    else if (diff <= -3) { qualityText += ` — качество снизилось (было ${prevPct}%)`; qualityTone = "bad" }
-    else qualityText += " — на уровне прошлого периода"
+  if (total > 0) {
+    let qualityText = `${pctOk}% задач прошли с первого раза`
+    let qualityTone: Tone = pctOk >= 70 ? "good" : pctOk >= 50 ? "warn" : "bad"
+    const prevEntrants = prevTasks ? prevTasks.filter(t => t.entered) : []
+    if (prevEntrants.length >= 5) {
+      const prevPct = pctOf(prevEntrants, t => t.total === 0)
+      const diff = pctOk - prevPct
+      if (diff >= 3) { qualityText += ` — качество выросло (было ${prevPct}%)`; qualityTone = "good" }
+      else if (diff <= -3) { qualityText += ` — качество снизилось (было ${prevPct}%)`; qualityTone = "bad" }
+      else qualityText += " — на уровне прошлого периода"
+    }
+    items.push({ icon: "🎯", text: qualityText, tone: qualityTone })
   }
-  items.push({ icon: "🎯", text: qualityText, tone: qualityTone })
 
   // 2. Кто чаще возвращает
   if (v1 > 0 || v2 > 0) {

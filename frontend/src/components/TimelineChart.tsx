@@ -43,16 +43,20 @@ export function TimelineChart({ tasks, dateFrom, dateTo, onShowTasks }: Timeline
     weekArr.push(w)
     weekByDate[cur.toISOString().slice(0,10)] = w
   }
+  // Бакетируем события по их датам: вход / возврат АрхКома / возврат ТА
+  const addEvent = (dateStr: string, kind: "entry"|"ak"|"ta", t: Task) => {
+    const wk = weekStart(dateStr)
+    let w = weekByDate[wk]
+    if (!w) { w = { date: fmtDate(wk), total:0, ak:0, ta:0, tasks:[] }; weekByDate[wk] = w; weekArr.push(w) }
+    if (kind === "entry") w.total++
+    else if (kind === "ak") w.ak++
+    else w.ta++
+    if (!w.tasks.some(x => x.key === t.key)) w.tasks.push(t)
+  }
   for (const t of tasks) {
-    if (!t.entryDate) continue
-    const wk = weekStart(t.entryDate)
-    if (!weekByDate[wk]) {
-      const w: WeekData = { date: fmtDate(wk), total:0, ak:0, ta:0, tasks:[] }
-      weekByDate[wk] = w; weekArr.push(w)
-    }
-    weekByDate[wk].total++; weekByDate[wk].tasks.push(t)
-    if (t.v1n>0) weekByDate[wk].ak++
-    if (t.v2n>0) weekByDate[wk].ta++
+    for (const d of t.entryDates) addEvent(d, "entry", t)
+    for (const d of t.v1Dates)    addEvent(d, "ak", t)
+    for (const d of t.v2Dates)    addEvent(d, "ta", t)
   }
   const data = weekArr.sort((a,b)=>a.date.localeCompare(b.date))
 
@@ -101,7 +105,7 @@ export function TimelineChart({ tasks, dateFrom, dateTo, onShowTasks }: Timeline
         <CardContent className="p-6">
           <p className="text-sm font-bold text-foreground mb-1">Динамика по неделям</p>
           <p className="text-xs text-muted-foreground mb-5">
-            Задачи, пришедшие к техархам · нажмите на точку для детализации
+            События по дате: пришло в комитет и возвраты · нажмите на точку
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={data} margin={{ top:4, right:4, left:-20, bottom:0 }}>
@@ -128,10 +132,10 @@ export function TimelineChart({ tasks, dateFrom, dateTo, onShowTasks }: Timeline
                 stroke="hsl(252,87%,70%)" strokeWidth={2.5} fill="url(#gTotal)"
                 dot={{ r:3, fill:"hsl(252,87%,70%)", strokeWidth:0, cursor:"pointer" }}
                 activeDot={makeActiveDot("hsl(252,87%,70%)")}/>
-              <Area type="monotone" dataKey="ak" name="АрхКом"
+              <Area type="monotone" dataKey="ak" name="Возвраты АрхКом"
                 stroke="hsl(166,76%,40%)" strokeWidth={1.5} fill="url(#gAk)" strokeDasharray="5 3"
                 dot={false} activeDot={makeActiveDot("hsl(166,76%,40%)")}/>
-              <Area type="monotone" dataKey="ta" name="ТА"
+              <Area type="monotone" dataKey="ta" name="Возвраты ТА"
                 stroke="hsl(350,89%,60%)" strokeWidth={1.5} fill="url(#gTa)" strokeDasharray="5 3"
                 dot={false} activeDot={makeActiveDot("hsl(350,89%,60%)")}/>
             </AreaChart>

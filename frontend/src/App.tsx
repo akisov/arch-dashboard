@@ -54,13 +54,15 @@ function prevRange(from: string, to: string) {
 }
 
 interface Metrics { total: number; ok: number; pctOk: number; v1: number; v2: number; both: number; cuts: number }
-function calcMetrics(tasks: { v1n: number; v2n: number; total: number }[]): Metrics {
-  const total = tasks.length
-  const ok = tasks.filter(t => t.total === 0).length
+// Событийная модель: «Пришло» — вошедшие в комитет в периоде;
+// возвраты (АрхКом/ТА) — по всем задачам, у кого возврат случился в периоде.
+function calcMetrics(tasks: { entered: boolean; v1n: number; v2n: number; total: number }[]): Metrics {
+  const entrants = tasks.filter(t => t.entered)
+  const ok = entrants.filter(t => t.total === 0).length
   return {
-    total,
+    total: entrants.length,
     ok,
-    pctOk: total ? Math.round(ok / total * 100) : 0,
+    pctOk: entrants.length ? Math.round(ok / entrants.length * 100) : 0,
     v1: tasks.filter(t => t.v1n > 0).length,
     v2: tasks.filter(t => t.v2n > 0).length,
     both: tasks.filter(t => t.v1n > 0 && t.v2n > 0).length,
@@ -204,8 +206,8 @@ export default function App() {
   })()
   const pm = prevView ? calcMetrics(prevView) : null
   const d = (cur: number, prev: number | undefined) => prev === undefined ? undefined : cur - prev
-  // Сравнение качества (%) надёжно только при достаточной выборке прошлого периода
-  const pmReliable = !!prevView && prevView.length >= 5
+  // Сравнение качества (%) надёжно только при достаточной выборке вошедших в прошлом периоде
+  const pmReliable = !!prevView && prevView.filter(t => t.entered).length >= 5
 
   // Отчёт «сейчас в Арх. комитете» — учитываем фильтры очереди и типа
   const archView = archTasks
@@ -330,7 +332,8 @@ export default function App() {
             {/* Queue tabs */}
             <div className="flex gap-3 flex-wrap">
               {QUEUES.map(q => {
-                const tasks = q === "ALL" ? (data?.tasks ?? []) : (data?.queues[q]?.tasks ?? [])
+                const all = q === "ALL" ? (data?.tasks ?? []) : (data?.queues[q]?.tasks ?? [])
+                const tasks = all.filter(t => t.entered)   // «пришло» — вошедшие в комитет
                 const isActive = queue === q
                 return (
                   <button key={q} onClick={() => { setQueue(q); setTypeFilter("all") }}
@@ -353,11 +356,11 @@ export default function App() {
                     <div className="flex gap-3 text-[11px] text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-[hsl(166,76%,40%)] inline-block" />
-                        {tasks.filter(t => t.v1n > 0).length} АрхКом
+                        {all.filter(t => t.v1n > 0).length} АрхКом
                       </span>
                       <span className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-[hsl(350,89%,60%)] inline-block" />
-                        {tasks.filter(t => t.v2n > 0).length} ТА
+                        {all.filter(t => t.v2n > 0).length} ТА
                       </span>
                     </div>
                   </button>
@@ -377,8 +380,8 @@ export default function App() {
               </div>
             ) : data && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-stretch">
-                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="Пришло в АрхКом" value={total}      sub="за период"                 icon="📋" color="purple" delta={d(m.total, pm?.total)} onClick={() => setTaskModal({ title: "Пришло в АрхКом за период", tasks: view })} /></div>
-                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="С первого раза"  value={`${m.pctOk}%`} sub={`${m.ok} без возвратов`}     icon="🎯" color="teal" delta={pmReliable ? d(m.pctOk, pm?.pctOk) : undefined} deltaSuffix="%" onClick={() => setTaskModal({ title: "Прошли с первого раза", tasks: view.filter(t => t.total === 0) })} /></div>
+                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="Пришло в АрхКом" value={total}      sub="за период"                 icon="📋" color="purple" delta={d(m.total, pm?.total)} onClick={() => setTaskModal({ title: "Пришло в АрхКом за период", tasks: view.filter(t => t.entered) })} /></div>
+                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="С первого раза"  value={`${m.pctOk}%`} sub={`${m.ok} без возвратов`}     icon="🎯" color="teal" delta={pmReliable ? d(m.pctOk, pm?.pctOk) : undefined} deltaSuffix="%" onClick={() => setTaskModal({ title: "Прошли с первого раза", tasks: view.filter(t => t.entered && t.total === 0) })} /></div>
                 <div className="animate-fade-in-up stagger-2 h-full"><StatCard label="АрхКом"          value={m.v1}      sub="на ревью аналитики"        icon="🔄" color="teal" delta={d(m.v1, pm?.v1)} invert onClick={() => setTaskModal({ title: "Вернул АрхКом", tasks: view.filter(t => t.v1n > 0) })} /></div>
                 <div className="animate-fade-in-up stagger-3 h-full"><StatCard label="ТА"              value={m.v2}      sub="вернули на уточнение"      icon="↩️" color="rose" delta={d(m.v2, pm?.v2)} invert onClick={() => setTaskModal({ title: "Вернул ТА", tasks: view.filter(t => t.v2n > 0) })} /></div>
                 <div className="animate-fade-in-up stagger-4 h-full"><StatCard label="Оба типа"        value={m.both}    sub="вернули и АрхКом, и ТА"     icon="⚡" color="amber" delta={d(m.both, pm?.both)} invert onClick={() => setTaskModal({ title: "Вернули и АрхКом, и ТА", tasks: view.filter(t => t.v1n > 0 && t.v2n > 0) })} /></div>

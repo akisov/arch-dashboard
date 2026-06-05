@@ -16,9 +16,11 @@ const TYPE_META: Record<string, { label: string; icon: string; hsl: string }> = 
 }
 
 export function TypeBreakdown({ tasks, onShowTasks }: Props) {
-  const total = tasks.length
+  // «Качество по типам» — про задачи, пришедшие в комитет в периоде
+  const entrants = tasks.filter(t => t.entered)
+  const total = entrants.length
   const groups: Record<string, Task[]> = {}
-  for (const t of tasks) (groups[t.issueType] ||= []).push(t)
+  for (const t of entrants) (groups[t.issueType] ||= []).push(t)
 
   const rows = Object.entries(groups)
     .map(([type, list]) => {

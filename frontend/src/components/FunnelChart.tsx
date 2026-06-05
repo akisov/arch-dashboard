@@ -8,10 +8,11 @@ interface FunnelChartProps {
 }
 
 export function FunnelChart({ tasks, onShowTasks }: FunnelChartProps) {
-  const total = tasks.length
+  const entrants = tasks.filter(t => t.entered)
+  const total = entrants.length
   const akTasks = tasks.filter(t => t.v1n > 0)
   const taTasks = tasks.filter(t => t.v2n > 0)
-  const okTasks = tasks.filter(t => t.total === 0)
+  const okTasks = entrants.filter(t => t.total === 0)
   const akCount = akTasks.length
   const taCount = taTasks.length
 
@@ -27,7 +28,7 @@ export function FunnelChart({ tasks, onShowTasks }: FunnelChartProps) {
       textColor: "text-[hsl(var(--chart-1))]",
       icon: "📋",
       desc: "Задач перешли в «Аналит. проработка готово»",
-      modalTasks: tasks,
+      modalTasks: entrants,
     },
     {
       label: "АрхКом вернул",
@@ -85,7 +86,7 @@ export function FunnelChart({ tasks, onShowTasks }: FunnelChartProps) {
               <div className="relative h-6 rounded-lg bg-secondary overflow-hidden">
                 <div
                   className={`absolute inset-y-0 left-0 rounded-lg transition-all duration-700 ease-out ${row.color} opacity-80 group-hover:opacity-100`}
-                  style={{ width: `${Math.max(row.pct, row.count > 0 ? 3 : 0)}%` }}
+                  style={{ width: `${Math.min(100, Math.max(row.pct, row.count > 0 ? 3 : 0))}%` }}
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">{row.desc}</p>
