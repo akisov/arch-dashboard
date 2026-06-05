@@ -56,15 +56,15 @@ export function DonutChart({ tasks, onShowTasks }: DonutChartProps) {
   return (
     <Card>
       <CardContent className="p-6">
-        <p className="text-sm font-bold text-foreground mb-1">Отсечки на задачу</p>
+        <p className="text-sm font-bold text-foreground mb-1">Сколько раз возвращали задачу</p>
         <p className="text-xs text-muted-foreground mb-6">
-          Только задачи с отсечками ({withCuts.length} из {tasks.length})
+          Распределение по числу возвратов · {withCuts.length} из {tasks.length} задач возвращали хотя бы раз
         </p>
 
         {withCuts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <span className="text-4xl mb-3">✅</span>
-            <p className="text-sm font-semibold">Все задачи прошли без отсечек</p>
+            <p className="text-sm font-semibold">Все задачи прошли без возвратов</p>
           </div>
         ) : (
           <div className="flex items-center gap-6 flex-wrap">
@@ -92,7 +92,7 @@ export function DonutChart({ tasks, onShowTasks }: DonutChartProps) {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-2xl font-black text-foreground">{withCuts.length}</span>
-                <span className="text-[10px] text-muted-foreground">с отсечками</span>
+                <span className="text-[10px] text-muted-foreground">с возвратами</span>
               </div>
             </div>
 
