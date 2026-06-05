@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatCard } from "@/components/StatCard"
 import { ReturnsCard } from "@/components/ReturnsCard"
+import { DonutChart } from "@/components/DonutChart"
 import { FunnelChart } from "@/components/FunnelChart"
 import { TimelineChart } from "@/components/TimelineChart"
 import { QueueBreakdown } from "@/components/QueueBreakdown"
@@ -413,15 +414,24 @@ export default function App() {
               </div>
             )}
 
-            {/* Breakdown + Table */}
+            {/* Breakdown + Donut */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Skeleton className="h-72 rounded-xl" />
                 <Skeleton className="h-72 rounded-xl" />
               </div>
             ) : data && (
-              <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
                 <QueueBreakdown tasks={view} onShowTasks={setTaskModal} />
+                <DonutChart tasks={view} onShowTasks={setTaskModal} />
+              </div>
+            )}
+
+            {/* Таблица задач — на всю ширину */}
+            {loading ? (
+              <Skeleton className="h-72 rounded-xl" />
+            ) : data && (
+              <div className="animate-fade-in-up" style={{ animationDelay: "0.45s" }}>
                 <TaskTable tasks={view} activeFilter={filter} onFilter={setFilter} />
               </div>
             )}
