@@ -12,7 +12,6 @@ import { TypeFilter } from "@/components/TypeFilter"
 import { MonthlyChart } from "@/components/MonthlyChart"
 import { TaskTable } from "@/components/TaskTable"
 import { ArchCommitteeReport } from "@/components/ArchCommitteeReport"
-import { AssigneeLoad } from "@/components/AssigneeLoad"
 import { TaskListModal, type TaskModalData } from "@/components/TaskListModal"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
@@ -383,9 +382,8 @@ export default function App() {
             {loading ? (
               <Skeleton className="h-64 rounded-xl" />
             ) : data && (
-              <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+              <div className="animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
                 <ArchCommitteeReport tasks={archView} loading={archLoading} />
-                <AssigneeLoad tasks={archView} />
               </div>
             )}
 
