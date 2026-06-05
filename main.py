@@ -18,6 +18,11 @@ ENTRY_STATUS = "180"   # analiticeskaaProrabotkaGotovo — задача приш
 V1_FROM, V1_TO = "180", "151"   # АрхКом: аналит.проработка готово → ревью аналитики
 V2_FROM, V2_TO = "145", "175"   # ТА: согласование архитектуры → доработка (modification)
 
+def is_test_task(title: str) -> bool:
+    """Тестовые задачи — в заголовке есть «тест» или «test» (любой регистр)."""
+    t = (title or "").lower()
+    return "тест" in t or "test" in t
+
 # Статусы, в которых задача считается «сейчас в Арх. комитете»
 ARCH_STATUSES = {
     "180": "Аналитическая проработка готово",
@@ -268,6 +273,7 @@ async def query_dashboard(date_from: str, date_to: str, queues: list[str]):
     ])
 
     rows = rows_to_dicts(results[0]) if results else []
+    rows = [r for r in rows if not is_test_task(r.get("title"))]
     task_keys = [r["issue_key"] for r in rows]
 
     if not task_keys:
@@ -359,6 +365,7 @@ async def query_arch_current(queues: list[str]):
     """, [*ARCH_STATUSES.keys(), *queues])])
 
     rows = rows_to_dicts(results[0]) if results else []
+    rows = [r for r in rows if not is_test_task(r.get("title"))]
     if not rows:
         return []
 
