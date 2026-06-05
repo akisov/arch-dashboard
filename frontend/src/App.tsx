@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatCard } from "@/components/StatCard"
-import { FlowCard } from "@/components/FlowCard"
+import { ReturnsCard } from "@/components/ReturnsCard"
 import { FunnelChart } from "@/components/FunnelChart"
 import { TimelineChart } from "@/components/TimelineChart"
 import { QueueBreakdown } from "@/components/QueueBreakdown"
@@ -12,6 +12,7 @@ import { TypeFilter } from "@/components/TypeFilter"
 import { MonthlyChart } from "@/components/MonthlyChart"
 import { TaskTable } from "@/components/TaskTable"
 import { ArchCommitteeReport } from "@/components/ArchCommitteeReport"
+import { AssigneeLoad } from "@/components/AssigneeLoad"
 import { TaskListModal, type TaskModalData } from "@/components/TaskListModal"
 import { SyncBar } from "@/components/SyncBar"
 import { SyncProgress } from "@/components/SyncProgress"
@@ -37,6 +38,30 @@ function initDates() {
   const start = new Date()
   start.setDate(start.getDate() - 30)
   return { from: fmt(start), to: fmt(end) }
+}
+
+// Предыдущий период такой же длины, идущий встык до текущего
+function prevRange(from: string, to: string) {
+  const f = new Date(from + "T00:00:00"), t = new Date(to + "T00:00:00")
+  const len = Math.round((t.getTime() - f.getTime()) / 86400000) + 1
+  const pt = new Date(f); pt.setDate(pt.getDate() - 1)
+  const pf = new Date(pt); pf.setDate(pf.getDate() - (len - 1))
+  return { from: fmt(pf), to: fmt(pt) }
+}
+
+interface Metrics { total: number; ok: number; pctOk: number; v1: number; v2: number; both: number; cuts: number }
+function calcMetrics(tasks: { v1n: number; v2n: number; total: number }[]): Metrics {
+  const total = tasks.length
+  const ok = tasks.filter(t => t.total === 0).length
+  return {
+    total,
+    ok,
+    pctOk: total ? Math.round(ok / total * 100) : 0,
+    v1: tasks.filter(t => t.v1n > 0).length,
+    v2: tasks.filter(t => t.v2n > 0).length,
+    both: tasks.filter(t => t.v1n > 0 && t.v2n > 0).length,
+    cuts: tasks.reduce((s, t) => s + t.total, 0),
+  }
 }
 
 // Пресеты периодов
@@ -72,6 +97,7 @@ export default function App() {
   const [typeFilter, setTypeFilter] = useState("all")
 
   const [data, setData] = useState<DashboardData | null>(null)
+  const [prevData, setPrevData] = useState<DashboardData | null>(null)
   const [archTasks, setArchTasks] = useState<ArchTask[]>([])
   const [archLoading, setArchLoading] = useState(false)
   const [syncInfo, setSyncInfo] = useState<SyncInfo | null>(null)
@@ -111,6 +137,9 @@ export default function App() {
       const d = await fetchDashboard(df, dt)
       setData(d)
       loadArch()
+      // Данные прошлого периода (такой же длины) — для трендов
+      const pr = prevRange(df, dt)
+      fetchDashboard(pr.from, pr.to).then(setPrevData).catch(() => setPrevData(null))
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -160,13 +189,16 @@ export default function App() {
   for (const t of viewByQueue) {
     typeCounts[t.issueType] = (typeCounts[t.issueType] ?? 0) + 1
   }
-  const total = view.length
-  const v1tasks = view.filter((t) => t.v1n > 0).length
-  const v2tasks = view.filter((t) => t.v2n > 0).length
-  const both = view.filter((t) => t.v1n > 0 && t.v2n > 0).length
-  const cuts = view.reduce((s, t) => s + t.total, 0)
-  const v1cuts = view.reduce((s, t) => s + t.v1n, 0)
-  const v2cuts = view.reduce((s, t) => s + t.v2n, 0)
+  const m = calcMetrics(view)
+  const total = m.total
+
+  // Метрики прошлого периода (тот же фильтр очереди + типа) — для трендов
+  const prevView = !prevData ? null : (() => {
+    const byQ = queue === "ALL" ? prevData.tasks : (prevData.queues[queue]?.tasks ?? [])
+    return typeFilter === "all" ? byQ : byQ.filter(t => t.issueType === typeFilter)
+  })()
+  const pm = prevView ? calcMetrics(prevView) : null
+  const d = (cur: number, prev: number | undefined) => prev === undefined ? undefined : cur - prev
 
   // Отчёт «сейчас в Арх. комитете» — учитываем фильтры очереди и типа
   const archView = archTasks
@@ -333,29 +365,31 @@ export default function App() {
 
             {/* Stat cards */}
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
               </div>
             ) : data && (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="animate-fade-in-up stagger-1"><StatCard label="Пришло в АрхКом" value={total} sub="задач за период"           icon="📋" color="purple" /></div>
-                <div className="animate-fade-in-up stagger-2"><StatCard label="АрхКом"        value={v1tasks} sub="задач на ревью аналитики"  icon="✅" color="teal" /></div>
-                <div className="animate-fade-in-up stagger-3"><StatCard label="ТА"            value={v2tasks} sub="задач вернули на уточнение" icon="🔴" color="rose" /></div>
-                <div className="animate-fade-in-up stagger-4"><StatCard label="Оба типа"      value={both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" /></div>
-                <div className="animate-fade-in-up stagger-5"><StatCard label="Всего возвратов" value={cuts}  sub="суммарно переходов"         icon="🔁" color="sky" /></div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="animate-fade-in-up stagger-1"><StatCard label="Пришло в АрхКом" value={total}      sub="задач за период"           icon="📋" color="purple" delta={d(m.total, pm?.total)} /></div>
+                <div className="animate-fade-in-up stagger-1"><StatCard label="С первого раза"  value={`${m.pctOk}%`} sub={`${m.ok} задач без возвратов`} icon="🎯" color="teal" delta={d(m.pctOk, pm?.pctOk)} deltaSuffix="пп" /></div>
+                <div className="animate-fade-in-up stagger-2"><StatCard label="АрхКом"          value={m.v1}      sub="задач на ревью аналитики"  icon="🔄" color="teal" delta={d(m.v1, pm?.v1)} invert /></div>
+                <div className="animate-fade-in-up stagger-3"><StatCard label="ТА"              value={m.v2}      sub="задач вернули на уточнение" icon="↩️" color="rose" delta={d(m.v2, pm?.v2)} invert /></div>
+                <div className="animate-fade-in-up stagger-4"><StatCard label="Оба типа"        value={m.both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" delta={d(m.both, pm?.both)} invert /></div>
+                <div className="animate-fade-in-up stagger-5"><StatCard label="Всего возвратов" value={m.cuts}    sub="суммарно переходов"         icon="🔁" color="sky" delta={d(m.cuts, pm?.cuts)} invert /></div>
               </div>
             )}
 
-            {/* Отчёт: что сейчас в Арх. комитете */}
+            {/* Отчёт: что сейчас в Арх. комитете + загрузка по исполнителям */}
             {loading ? (
               <Skeleton className="h-64 rounded-xl" />
             ) : data && (
-              <div className="animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+              <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
                 <ArchCommitteeReport tasks={archView} loading={archLoading} />
+                <AssigneeLoad tasks={archView} />
               </div>
             )}
 
-            {/* Funnel + Flow cards */}
+            {/* Funnel + Returns */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Skeleton className="h-64 rounded-xl" />
@@ -364,10 +398,7 @@ export default function App() {
             ) : data && (
               <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
                 <FunnelChart tasks={view} onShowTasks={setTaskModal} />
-                <div className="grid grid-cols-1 gap-4">
-                  <FlowCard type="ak" tasks={view} totalTasks={total} onShowTasks={setTaskModal} />
-                  <FlowCard type="ta" tasks={view} totalTasks={total} onShowTasks={setTaskModal} />
-                </div>
+                <ReturnsCard tasks={view} totalTasks={total} onShowTasks={setTaskModal} />
               </div>
             )}
 

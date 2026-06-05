@@ -54,6 +54,8 @@ interface Props {
 export function ArchCommitteeReport({ tasks, loading }: Props) {
   const th = "py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap"
   const td = "py-3 text-sm"
+  const avgDays = tasks.length ? Math.round(tasks.reduce((s, t) => s + t.daysInStatus, 0) / tasks.length) : 0
+  const stuck = tasks.filter(t => t.daysInStatus >= 7).length
 
   return (
     <Card className="overflow-hidden">
@@ -65,7 +67,19 @@ export function ArchCommitteeReport({ tasks, loading }: Props) {
             <span className="ml-2 text-xs text-muted-foreground">{tasks.length} {plural(tasks.length)}</span>
           </div>
         </div>
-        {loading && <RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+        <div className="flex items-center gap-2">
+          {tasks.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              ср. {avgDays}д на статусе
+            </span>
+          )}
+          {stuck > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400">
+              🔥 {stuck} засиделись (≥7д)
+            </span>
+          )}
+          {loading && <RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+        </div>
       </div>
 
       <div className="overflow-x-auto">

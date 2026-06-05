@@ -43,11 +43,19 @@ interface StatCardProps {
   icon: string
   color: keyof typeof COLOR_MAP
   onClick?: () => void
+  delta?: number          // изменение к прошлому периоду
+  deltaSuffix?: string    // "" | "%" | "пп"
+  invert?: boolean        // true — рост это плохо (для возвратов)
 }
 
-export function StatCard({ label, value, sub, icon, color, onClick }: StatCardProps) {
+export function StatCard({ label, value, sub, icon, color, onClick, delta, deltaSuffix = "", invert = false }: StatCardProps) {
   const c = COLOR_MAP[color]
   const [hovered, setHovered] = useState(false)
+
+  const hasDelta = delta !== undefined && delta !== 0
+  const up = (delta ?? 0) > 0
+  const good = invert ? !up : up
+  const deltaColor = good ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-rose-600 dark:text-rose-400 bg-rose-500/10"
 
   return (
     <div
@@ -86,9 +94,16 @@ export function StatCard({ label, value, sub, icon, color, onClick }: StatCardPr
       </div>
 
       <div className="relative">
-        <p className={cn("text-4xl font-black tracking-tighter leading-none transition-colors duration-200", hovered ? c.text : "text-foreground")}>
-          <AnimatedNumber value={value} />
-        </p>
+        <div className="flex items-end gap-2 flex-wrap">
+          <p className={cn("text-4xl font-black tracking-tighter leading-none transition-colors duration-200", hovered ? c.text : "text-foreground")}>
+            <AnimatedNumber value={value} />
+          </p>
+          {hasDelta && (
+            <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold tabular-nums", deltaColor)}>
+              {up ? "▲" : "▼"}{Math.abs(delta!)}{deltaSuffix}
+            </span>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground mt-1.5">{sub}</p>
       </div>
     </div>
