@@ -369,13 +369,13 @@ export default function App() {
                 {Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
               </div>
             ) : data && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div className="animate-fade-in-up stagger-1"><StatCard label="Пришло в АрхКом" value={total}      sub="задач за период"           icon="📋" color="purple" delta={d(m.total, pm?.total)} /></div>
-                <div className="animate-fade-in-up stagger-1"><StatCard label="С первого раза"  value={`${m.pctOk}%`} sub={`${m.ok} задач без возвратов`} icon="🎯" color="teal" delta={d(m.pctOk, pm?.pctOk)} deltaSuffix="пп" /></div>
-                <div className="animate-fade-in-up stagger-2"><StatCard label="АрхКом"          value={m.v1}      sub="задач на ревью аналитики"  icon="🔄" color="teal" delta={d(m.v1, pm?.v1)} invert /></div>
-                <div className="animate-fade-in-up stagger-3"><StatCard label="ТА"              value={m.v2}      sub="задач вернули на уточнение" icon="↩️" color="rose" delta={d(m.v2, pm?.v2)} invert /></div>
-                <div className="animate-fade-in-up stagger-4"><StatCard label="Оба типа"        value={m.both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" delta={d(m.both, pm?.both)} invert /></div>
-                <div className="animate-fade-in-up stagger-5"><StatCard label="Всего возвратов" value={m.cuts}    sub="суммарно переходов"         icon="🔁" color="sky" delta={d(m.cuts, pm?.cuts)} invert /></div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-stretch">
+                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="Пришло в АрхКом" value={total}      sub="задач за период"           icon="📋" color="purple" delta={d(m.total, pm?.total)} /></div>
+                <div className="animate-fade-in-up stagger-1 h-full"><StatCard label="С первого раза"  value={`${m.pctOk}%`} sub={`${m.ok} задач без возвратов`} icon="🎯" color="teal" delta={d(m.pctOk, pm?.pctOk)} deltaSuffix="пп" /></div>
+                <div className="animate-fade-in-up stagger-2 h-full"><StatCard label="АрхКом"          value={m.v1}      sub="задач на ревью аналитики"  icon="🔄" color="teal" delta={d(m.v1, pm?.v1)} invert /></div>
+                <div className="animate-fade-in-up stagger-3 h-full"><StatCard label="ТА"              value={m.v2}      sub="задач вернули на уточнение" icon="↩️" color="rose" delta={d(m.v2, pm?.v2)} invert /></div>
+                <div className="animate-fade-in-up stagger-4 h-full"><StatCard label="Оба типа"        value={m.both}    sub="вернули и АрхКом и ТА"      icon="⚡" color="amber" delta={d(m.both, pm?.both)} invert /></div>
+                <div className="animate-fade-in-up stagger-5 h-full"><StatCard label="Всего возвратов" value={m.cuts}    sub="суммарно переходов"         icon="🔁" color="sky" delta={d(m.cuts, pm?.cuts)} invert /></div>
               </div>
             )}
 

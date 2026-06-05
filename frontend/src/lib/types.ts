@@ -38,4 +38,6 @@ export interface ArchTask {
   assignee: string
   since: string
   daysInStatus: number
+  v1n: number   // возвратов от АрхКома (на ревью аналитики)
+  v2n: number   // возвратов от ТА (на доработку)
 }

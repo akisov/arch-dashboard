@@ -12,6 +12,10 @@ const STATUS_STYLE: Record<string, { dot: string; text: string; bg: string }> = 
 }
 const STATUS_FALLBACK = { dot: "bg-muted-foreground", text: "text-muted-foreground", bg: "bg-secondary" }
 
+const TYPE_ICON: Record<string, string> = {
+  story: "📖", analytics: "📊", technicaldebt: "🔧", improvement: "⚡", elaboration: "📝",
+}
+
 const AVATAR_COLORS = [
   "bg-[hsl(252,87%,65%)]", "bg-[hsl(166,76%,40%)]", "bg-[hsl(350,89%,60%)]",
   "bg-[hsl(38,92%,50%)]", "bg-[hsl(199,89%,55%)]", "bg-[hsl(280,70%,60%)]",
@@ -94,9 +98,10 @@ export function ArchCommitteeReport({ tasks, loading }: Props) {
               <tr className="bg-secondary/50 border-b border-border">
                 <th className={cn(th, "text-left pl-5 pr-2 w-[150px]")}>Ключ</th>
                 <th className={cn(th, "text-left px-2")}>Задача</th>
-                <th className={cn(th, "text-left px-2 w-[230px]")}>Статус</th>
-                <th className={cn(th, "text-center px-2 w-[120px]")}>Дней на статусе</th>
-                <th className={cn(th, "text-left px-2 w-[230px]")}>Исполнитель</th>
+                <th className={cn(th, "text-left px-2 w-[210px]")}>Статус</th>
+                <th className={cn(th, "text-center px-2 w-[120px]")}>Возвраты</th>
+                <th className={cn(th, "text-center px-2 w-[110px]")}>Дней на статусе</th>
+                <th className={cn(th, "text-left px-2 w-[220px]")}>Исполнитель</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -117,13 +122,30 @@ export function ArchCommitteeReport({ tasks, loading }: Props) {
                       </a>
                     </td>
                     <td className={cn(td, "px-2 max-w-[320px]")}>
-                      <span className="line-clamp-1 leading-snug text-foreground">{t.title}</span>
+                      <span className="flex items-center gap-1.5 leading-snug text-foreground">
+                        <span className="shrink-0 text-sm">{TYPE_ICON[t.issueType] ?? "◈"}</span>
+                        <span className="line-clamp-1">{t.title}</span>
+                      </span>
                     </td>
                     <td className={cn(td, "px-2")}>
                       <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap", s.bg, s.text)}>
                         <span className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
                         {t.status}
                       </span>
+                    </td>
+                    <td className={cn(td, "px-2")}>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span title="Возвраты ТА (на доработку)"
+                          className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold tabular-nums",
+                            t.v2n > 0 ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" : "bg-secondary text-muted-foreground/50")}>
+                          ↩️ {t.v2n}
+                        </span>
+                        <span title="Возвраты АрхКом (на ревью аналитики)"
+                          className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold tabular-nums",
+                            t.v1n > 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-secondary text-muted-foreground/50")}>
+                          🔄 {t.v1n}
+                        </span>
+                      </div>
                     </td>
                     <td className={cn(td, "px-2 text-center")}>
                       <span className={cn("font-black tabular-nums text-base", dayColor)}>{t.daysInStatus}</span>

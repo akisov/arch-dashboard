@@ -337,6 +337,20 @@ async def query_arch_current(queues: list[str]):
     if not rows:
         return []
 
+    # Сколько раз задачу возвращали (за всё время): АрхКом (V1) и ТА (V2)
+    keys_all = [r["issue_key"] for r in rows]
+    key_ph = ",".join("?" * len(keys_all))
+    cut_results = await turso_execute([stmt(f"""
+        SELECT issue_key,
+               SUM(CASE WHEN from_status=? AND to_status=? THEN 1 ELSE 0 END) AS v1n,
+               SUM(CASE WHEN from_status=? AND to_status=? THEN 1 ELSE 0 END) AS v2n
+        FROM transitions
+        WHERE issue_key IN ({key_ph})
+        GROUP BY issue_key
+    """, [V1_FROM, V1_TO, V2_FROM, V2_TO, *keys_all])])
+    cuts = {r["issue_key"]: (int(r["v1n"] or 0), int(r["v2n"] or 0))
+            for r in rows_to_dicts(cut_results[0])} if cut_results else {}
+
     # Живое обогащение из Трекера: исполнитель, актуальный статус и дата входа.
     # Инкрементальный синк не перезагружает задачи без изменений, поэтому
     # assignee в БД может отсутствовать — берём напрямую из Трекера.
@@ -383,6 +397,7 @@ async def query_arch_current(queues: list[str]):
             except ValueError:
                 days = 0
 
+        v1n, v2n = cuts.get(key, (0, 0))
         out.append({
             "key": key,
             "title": r["title"] or "—",
@@ -395,6 +410,8 @@ async def query_arch_current(queues: list[str]):
             "assignee": assignee,
             "since": started,
             "daysInStatus": days,
+            "v1n": v1n,
+            "v2n": v2n,
         })
     out.sort(key=lambda t: t["daysInStatus"], reverse=True)
     return out
