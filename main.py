@@ -1,4 +1,5 @@
 import os
+import re
 import asyncio
 import httpx
 from datetime import date, datetime, timedelta, timezone
@@ -20,10 +21,12 @@ ENTRY_STATUS = "180"   # analiticeskaaProrabotkaGotovo — задача приш
 V1_FROM, V1_TO = "180", "151"   # АрхКом: аналит.проработка готово → ревью аналитики
 V2_FROM, V2_TO = "145", "175"   # ТА: согласование архитектуры → доработка (modification)
 
+_TEST_RE = re.compile(r"\b(тест|test)\b", re.IGNORECASE)
+
 def is_test_task(title: str) -> bool:
-    """Тестовые задачи — в заголовке есть «тест» или «test» (любой регистр)."""
-    t = (title or "").lower()
-    return "тест" in t or "test" in t
+    """Тестовые задачи — в заголовке есть отдельное слово «тест»/«test».
+    Подстроки вроде «тестирование», «тестовая» НЕ считаются тестовыми."""
+    return bool(_TEST_RE.search(title or ""))
 
 # Статусы, в которых задача считается «сейчас в Арх. комитете»
 ARCH_STATUSES = {
